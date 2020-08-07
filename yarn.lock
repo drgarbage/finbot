@@ -4219,6 +4219,11 @@ etag@~1.8.1:
   resolved "https://registry.yarnpkg.com/etag/-/etag-1.8.1.tgz#41ae2eeb65efa62268aebfea83ac7d79299b0887"
   integrity sha1-Qa4u62XvpiJorr/qg6x9eSmbCIc=
 
+"eventemitter3@>=2 <4":
+  version "3.1.2"
+  resolved "https://registry.yarnpkg.com/eventemitter3/-/eventemitter3-3.1.2.tgz#2d3d48f9c346698fce83a85d7d664e98535df6e7"
+  integrity sha512-tvtQIeLVHjDkJYnzf2dgVMxfuSGJeM/7UCG17TT4EumTfNtF+0nebF/4zWOIkCreAbtNqhGEboB6BWrwqNaw4Q==
+
 eventemitter3@^4.0.0:
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/eventemitter3/-/eventemitter3-4.0.0.tgz#d65176163887ee59f386d64c82610b696a4a74eb"
@@ -10768,6 +10773,13 @@ write@1.0.3:
   integrity sha512-/lg70HAjtkUgWPVZhZcm+T4hkL8Zbtp1nFNOn3lRrxnlv50SRBv7cR7RqR+GMsd3hUXy9hWBo4CHTbFTcOYwig==
   dependencies:
     mkdirp "^0.5.1"
+
+ws-wrapper@^2.0.2:
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/ws-wrapper/-/ws-wrapper-2.0.2.tgz#edada31dfb5bc5602f538891e27afb5106611d55"
+  integrity sha512-jMoPZ0UGdRXH9YPhtCPFXxwytJtanAJLkK+WuLwDVTQtJnqy0dSFEmHifvmqaLw5qUWY8NmMrMoc7v1usbS+uA==
+  dependencies:
+    eventemitter3 ">=2 <4"
 
 ws@^5.2.0:
   version "5.2.2"
