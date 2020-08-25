@@ -1,93 +1,45 @@
-import React, {useEffect, useState} from 'react';
-import logo from './logo.svg';
+import React from 'react';
+import { BrowserRouter as Router, Route, Link, Switch } from 'react-router-dom';
+import { PageH5 } from './pages/page-h5';
+import { PageCanvas } from './pages/page-canvas';
+import { PageBinance } from './pages/page-binance';
+
 import './App.css';
 
-import {subscribeBook, subscribeRawBook} from './core/applications';
-import _ from 'lodash';
-
-
-const EXPIRED = 10 * 1000;
-
-const sum = (list, index, middle) => {
-  return index <= middle ?
-    _.sum(_(list)
-      .slice(index, middle)
-      .map('amount')
-      .value()) :
-    _.sum(_(list)
-      .slice(middle, index)
-      .map('amount')
-      .value());
-}
-
-function App() {
-  const [book, setBook] = useState({});
-  const [rawBook, setRawBook] = useState({});
-  const now = new Date();
-
-  useEffect(()=>{
-    subscribeBook(data => setBook(book => ({...book, ...data})));
-    subscribeRawBook(data => setRawBook(rawBook => ({...rawBook, ...data})));
-  }, []);
-
-  let bookList = _(book)
-    .toArray()
-    .sort((a,b) => a.price < b.price)
-    .filter(n => (now - n.stamp) <= EXPIRED)
-    .reverse()
-    .value();
-
-  let bookMiddleIndex = _.findIndex(bookList, v => v.amount >= 0);
-  
-  let rawBookList = _(rawBook)
-    .toArray()
-    .sort((a,b) => a.price < b.price)
-    .filter(n => (now - n.stamp) <= EXPIRED)
-    .reverse()
-    .value();
-
-  return (
-    <div className="App">
-        
-      <div className="panel">
-        <ul>
-          {
-            bookList.map((value, index) => {
-              let s = sum(bookList, index, bookMiddleIndex);
-              return (
-                  <li className="card" key={value.price}>
-                    <div className="price">{value.price}</div>
-                    <div className="amountBG" style={{width:Math.abs(value.amount) * 10, background: value.amount > 0 ? 'green' : 'red'}}></div>
-                    <div className="amount">{Math.abs(value.amount)}</div>
-                    <div className="sumBG" style={{width:Math.abs(s), background: s > 0 ? 'green' : 'red'}}></div>
-                    <div className="sum">{Math.abs(s)}</div>
-                  </li>
-                );
-              }
-            )
-          }
-        </ul>
-      </div>
-
-      <div className="panel">
-        <ul>
-          {
-            rawBookList.map((value) => {
-              return (
-                  <li className="card" key={value.price}>
-                    <div className="price">{value.price}</div>
-                    <div className="amountBG" style={{width:Math.abs(value.amount) * 10, background: value.amount > 0 ? 'green' : 'red'}}></div>
-                    <div className="amount">{Math.abs(value.amount)}</div>
-                  </li>
-                );
-              }
-            )
-          }  
-        </ul>
-      </div>
-      
+export const PageHome = (props) =>
+  <div>
+    <div style={{padding: 20}}>
+      <a href="/page-h5">HTML5</a>
+      <a href="/page-canvas">CANVAS</a>
+      <a href="/page-binance">BINANCE</a>
     </div>
-  );
-}
+    <div style={{padding: 20}}>
+      {props.children}
+    </div>
+  </div>
 
-export default App;
+export default ()=>
+  <Router>
+    <nav>
+      <ul>
+        <li>
+          <Link to="/page-h5">HTML5</Link>
+        </li>
+        <li>
+          <Link to="/page-canvas">CANVAS</Link>
+        </li>
+        <li>
+          <Link to="/page-binance">BINANCE</Link>
+        </li>
+      </ul>
+    </nav>
+
+    <div class="content">
+      <Switch>
+        <Route path="/home" component={PageHome} />
+        <Route path="/page-h5" component={PageH5} />
+        <Route path="/page-canvas" component={PageCanvas} />
+        <Route path="/page-binance" component={PageBinance} />
+      </Switch>
+    </div>
+  </Router>

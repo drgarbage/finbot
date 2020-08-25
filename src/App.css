@@ -1,5 +1,6 @@
 body {
   background-color: #282c34;
+  overflow: hidden;
 }
 
 .App {
@@ -7,71 +8,33 @@ body {
   flex-direction: row;
 }
 
-.panel {
-  display: inline-flex;
-  flex: 1;
-  height: 100%;
+nav {
+  margin: 0px;
+  padding: 0px;
+  background-color: silver;
+}
+
+nav ul {
+  margin: 0px;
+  padding: 0px;
+}
+
+nav li {
+  background: white;
+  display: inline-block;
+  padding: 10px;
+  margin-right: 1px;
+}
+
+a {
+  color: black;
+  text-decoration: none;
+}
+
+.content {
+  padding: 20px;
+  overflow-x: auto;
   overflow-y: auto;
-  overflow-x: hidden;
-}
-
-.card {
-  position: relative;
-  width: 400px;
-  height: 20px;
-  font-size: 10px;
-}
-
-.price {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 80px;
-  height: 20px;
-  text-align: left;
-  vertical-align: middle;
-}
-
-.amount {
-  position: absolute;
-  display: inline-block;
-  top: 0;
-  left: 120px;
-  width: 80px;
-  height: 20px;
-  text-align: left;
-  vertical-align: middle;
-  padding-left: 10;
-}
-
-.amountBG {
-  position: absolute;
-  display: inline-block;
-  top: 0;
-  left: 120px;
-  height: 20px;
-  background: gray;
-}
-
-.sum {
-  position: absolute;
-  display: inline-block;
-  top: 0;
-  left: 200px;
-  width: 80px;
-  height: 20px;
-  text-align: left;
-  vertical-align: middle;
-  padding-left: 10;
-}
-
-.sumBG {
-  position: absolute;
-  display: inline-block;
-  top: 0;
-  left: 200px;
-  height: 20px;
-  background: gray;
 }
 
 @keyframes App-logo-spin {
