@@ -1,20 +1,15 @@
 import React, { useEffect } from 'react';
-import Binance from 'binance-api-node';
-
-const connect = () => {
-  // const client = Binance();
-  // client.ws.trades(['BTCUSDT'], trade => {
-  //   console.log(trade)
-  // });
-}
+import { subscribe } from '../../core/data-sources/biance';
+import { useState } from 'react';
 
 export const PageBinance = (props) => {
+  const [data, setData] = useState({});
 
   useEffect(()=>{
-    connect();
+    subscribe({symbol:'BTCUSD'}, setData);
   }, []);
 
   return (
-    <div>CONNECTING</div>
+    <div>{JSON.stringify(data)}</div>
   );
 }

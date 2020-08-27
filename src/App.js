@@ -34,7 +34,7 @@ export default ()=>
       </ul>
     </nav>
 
-    <div class="content">
+    <div className="content">
       <Switch>
         <Route path="/home" component={PageHome} />
         <Route path="/page-h5" component={PageH5} />

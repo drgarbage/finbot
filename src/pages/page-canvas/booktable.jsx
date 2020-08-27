@@ -1,5 +1,6 @@
 import React, {useRef, useState, useEffect} from 'react';
-import {subscribeBook as subscribe} from '../../core/applications';
+import {subscribeBook as subscribeData} from '../../core/applications';
+import {decimalPlaces} from '../../core/utils';
 import _ from 'lodash';
 
 const DELTA_MIN = 5;
@@ -28,8 +29,13 @@ const arrange = (book) =>
     .value()
     .reverse();
 
-const gap = (value, deltaOffset) =>
-  parseInt(Math.round(parseFloat(value) / deltaOffset) * deltaOffset);
+const gap = (value, deltaOffset) =>{
+  let dplace = decimalPlaces(deltaOffset);
+  let scale = parseFloat(Math.pow(10, dplace));
+  let valueScaled = value * scale;
+  let doScaled = deltaOffset * scale;
+  return Math.round(parseInt(valueScaled / doScaled) * doScaled) / scale;
+}
 
 const convertBlocks = (book, config) => {
   let {delta, deltaOffset} = config;
@@ -43,12 +49,13 @@ const convertBlocks = (book, config) => {
   let middle = gap(priceDealed, deltaOffset);
   let min = middle - (delta * deltaOffset);
   let max = middle + delta * deltaOffset;
-  let values = _.range(min, max, deltaOffset);
+  let digits = parseInt(decimalPlaces(deltaOffset)) + 2;
+  let values = _.range(min, max, deltaOffset).map(v => _.round(v, digits));
   let blocks = values.map(v => ({price: v, cob: 0, cob_ag: 0})).reverse();
 
   blocks.forEach(block => {
     block.cob = _(arrangedBook)
-      .filter(book => gap(book.price, deltaOffset) == block.price)
+      .filter(book => gap(book.price, deltaOffset) === block.price)
       .sumBy(book => book.amount);
   });
 
@@ -61,8 +68,10 @@ const convertBlocks = (book, config) => {
 
 const drawTable = (ctx, config, book) => {
   let blocks = convertBlocks(book, config);
-  if(blocks.length == 0) return;
-  let {delta,height} = config;
+  if(blocks.length === 0) return;
+  let {delta,deltaOffset,height} = config;
+
+  let dplace = decimalPlaces(deltaOffset) + 2;
 
   let blockHeight = height / blocks.length;
   let cobMax = _.maxBy(blocks, b => b.cob).cob;
@@ -97,10 +106,10 @@ const drawTable = (ctx, config, book) => {
     ctx.textBaseline = 'middle';  
     ctx.fillStyle = 'white';
     ctx.fillText(price, posX + 10, posTxtY, 100);
-    ctx.fillText(_.round(cob, 10), posX + fieldW*1 + 10, posTxtY, 100);
-    ctx.fillText(_.round(cob_ag, 10), posX + fieldW*2 + 10, posTxtY, 100);
+    ctx.fillText(Math.abs(_.round(cob, dplace)), posX + fieldW*1 + 10, posTxtY, 100);
+    ctx.fillText(Math.abs(_.round(cob_ag, dplace)), posX + fieldW*2 + 10, posTxtY, 100);
 
-    if(index == delta-1){
+    if(index === delta-1){
       ctx.strokeStyle = 'yellow';
       ctx.strokeRect(posX, index * blockHeight, fieldW * 3, fieldH - 1);
     }
@@ -113,15 +122,15 @@ const drawDepth = (ctx, config, book) => {
   let { posX, fieldWidth, height } = config;
 
   let blocks = convertBlocks(book, config);
-  if(blocks.length == 0) return;
+  if(blocks.length === 0) return;
 
   let blockHeight = height / blocks.length;
   let cobMax = _.maxBy(blocks, b => b.cob).cob;
-  let cobAgMax = _.maxBy(blocks, b => b.cob_ag).cob_ag;
+  // let cobAgMax = _.maxBy(blocks, b => b.cob_ag).cob_ag;
 
   blocks.forEach((block,index) => {
     let cobRate = block.cob / cobMax;
-    let cobAgRate = block.cob_ag / cobAgMax;
+    // let cobAgRate = block.cob_ag / cobAgMax;
     let rate = cobRate;
     let rateAbs = Math.abs(rate);
     ctx.save();
@@ -144,7 +153,7 @@ const drawHistory = (ctx, config, books) => {
       {
         ...config, 
         posX: startPos - (100 + index), 
-        fieldWidth: index == 0 ? 100 : 1
+        fieldWidth: index === 0 ? 100 : 1
       }, 
       book);
     index++;
@@ -168,7 +177,7 @@ export const BookTable = (props) => {
   // data
   const [state, setState] = useState({book: {}, books: []});
   const [delta, setDelta] = useState(20);
-  const [deltaOffset, setDeltaOffset] = useState(1);
+  const [deltaOffset] = useState(1);
   const [dragStart, setDragStart] = useState(null);
 
   const onBookUpdate = data => {
@@ -186,7 +195,7 @@ export const BookTable = (props) => {
 
   useEffect(()=>{
     let latestBook = {};
-    subscribe(data => {
+    subscribeData('tBTCUSD', data => {
       latestBook = {...latestBook, ...data};
     });
 

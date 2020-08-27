@@ -59,31 +59,31 @@ export const subscribe = (url, command, {onResponse, onSnapshot, onUpdate, onErr
   });
 }
 
-export const subscribeTicker = (callback) => {
+// export const subscribeTicker = (symbol, callback) => {
 
-  let url = 'wss://api-pub.bitfinex.com/ws/2';
-  let command = {
-    event: 'subscribe',
-    channel: 'tickeer',
-    symbol: 'tBTCUSD'
-  };
+//   let url = 'wss://api-pub.bitfinex.com/ws/2';
+//   let command = {
+//     event: 'subscribe',
+//     channel: 'tickeer',
+//     symbol: symbol
+//   };
 
-  subscribe(url, command, {
-    onResponse: (rsp) => { console.log('response:', JSON.stringify(rsp))},
-    onSnapshot: (channel, snapshot) => {console.log('snapshot:', JSON.stringify(snapshot)); callback(snapshot);},
-    onUpdate: (channel, data) => {console.log('update', JSON.stringify(data)); callback(data);}
-  });
+//   subscribe(url, command, {
+//     onResponse: (rsp) => { console.log('response:', JSON.stringify(rsp))},
+//     onSnapshot: (channel, snapshot) => {console.log('snapshot:', JSON.stringify(snapshot)); callback(snapshot);},
+//     onUpdate: (channel, data) => {console.log('update', JSON.stringify(data)); callback(data);}
+//   });
 
-}
+// }
 
-export const subscribeBook = (callback) => {
+export const subscribeBook = (symbol, callback) => {
   // response price: { count, amount }
 
   let url = 'wss://api-pub.bitfinex.com/ws/2';
   let command = {
     event: 'subscribe', 
     channel: 'book', 
-    symbol: 'tBTCUSD',
+    symbol: symbol,
     percision: 'P4',
     length: "1000", 
   };
@@ -109,14 +109,14 @@ export const subscribeBook = (callback) => {
 
 }
 
-export const subscribeRawBook = (callback) => {
+export const subscribeRawBook = (symbol, callback) => {
   // response price: { count, amount }
 
   let url = 'wss://api-pub.bitfinex.com/ws/2';
   let command = {
     event: 'subscribe', 
     channel: 'book', 
-    symbol: 'tBTCUSD',
+    symbol: symbol,
     prec: 'R0',
   };
   
