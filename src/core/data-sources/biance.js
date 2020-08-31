@@ -24,7 +24,6 @@ export const subscribe = ({symbol} , onUpdate) => {
     let updateId = json.u;
 
     if(updateId !== lastUpdateId) {
-      console.log('updateId changed', cachedUpdate);
       if(cachedUpdate) onUpdate(cachedUpdate);
       cachedUpdate = {};
     }
@@ -36,7 +35,6 @@ export const subscribe = ({symbol} , onUpdate) => {
   }
 
   socket.onopen = (event) => {
-    console.log(`open stream: ${streamName}`);
     socket.send(JSON.stringify({
       "method": "SUBSCRIBE",
       "params": [
@@ -47,11 +45,11 @@ export const subscribe = ({symbol} , onUpdate) => {
   }
 
   socket.onclose = (event) => {
-    console.log('ws closed');
+    console.info('ws closed');
   }
 
   socket.onerror = (event) => {
-    console.log(event);
+    console.error(event);
   }
 
 }
