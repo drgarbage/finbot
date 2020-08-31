@@ -1,11 +1,9 @@
-import React, {useRef, useState, useEffect} from 'react';
-import {subscribeBook as subscribeData} from '../../core/applications';
-import {decimalPlaces} from '../../core/utils';
+import React, { useRef, useState, useEffect } from 'react';
+import {decimalPlaces} from '../core/utils';
 import _ from 'lodash';
 
 const DELTA_MIN = 5;
 const DELTA_MAX = 100;
-const BUFFER_SIZE = 400;
 
 const sum = (list, index, middle) => {
 
@@ -169,41 +167,18 @@ const draw = (ctx, config, state) => {
   drawHistory(ctx, config, books);
 }
 
+export const PressureView = (props) => {
+  const { 
+    width, height, 
+    book, books, 
+    delta, deltaOffset,
+    onDeltaChanged, onDeltaOffsetChanged, 
+  } = props;
+  const state = { book, books };
 
-export const BookTable = (props) => {
-  const {width, height} = props;
   const canvasRef = useRef(null);
-
-  // data
-  const [state, setState] = useState({book: {}, books: []});
-  const [delta, setDelta] = useState(20);
-  const [deltaOffset] = useState(1);
   const [dragStart, setDragStart] = useState(null);
 
-  const onBookUpdate = data => {
-    setState(state => {
-      let updatedBook = {...state.book, ...data};
-      let updatedBooks = [...state.books, updatedBook];
-      if(updatedBooks.length > BUFFER_SIZE)
-        updatedBooks = _.slice(updatedBooks, updatedBooks.length - BUFFER_SIZE, updatedBooks.length);
-      return ({
-        book: updatedBook,
-        books: updatedBooks,
-      })
-    });
-  };
-
-  useEffect(()=>{
-    let latestBook = {};
-    subscribeData('tBTCUSD', data => {
-      latestBook = {...latestBook, ...data};
-    });
-
-    setInterval(()=>{
-      onBookUpdate(latestBook);
-    }, 66);
-  }, []);
-  
   useEffect(()=>{
     const canvasObj = canvasRef.current;
     const ctx = canvasObj.getContext('2d');
@@ -229,7 +204,8 @@ export const BookTable = (props) => {
         let deltaUpdate = dragStart.delta + offsetDirection * deltaOffset;
         if(deltaUpdate < DELTA_MIN) deltaUpdate = DELTA_MIN;
         if(deltaUpdate > DELTA_MAX) deltaUpdate = DELTA_MAX;
-        setDelta(deltaUpdate);
+        onDeltaChanged(deltaUpdate);
+        // setDelta(deltaUpdate);
       }}
       onMouseUp={e => {
         if(!dragStart) return;

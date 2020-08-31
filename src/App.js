@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Link, Switch } from 'react-router-dom';
 import { PageH5 } from './pages/page-h5';
-import { PageCanvas } from './pages/page-canvas';
+import { PageBitfinex } from './pages/page-bitfinex';
 import { PageBinance } from './pages/page-binance';
 
 import './App.css';
@@ -23,10 +23,7 @@ export default ()=>
     <nav>
       <ul>
         <li>
-          <Link to="/page-h5">HTML5</Link>
-        </li>
-        <li>
-          <Link to="/page-canvas">CANVAS</Link>
+          <Link to="/page-bitfinex">BITFINEX</Link>
         </li>
         <li>
           <Link to="/page-binance">BINANCE</Link>
@@ -38,7 +35,7 @@ export default ()=>
       <Switch>
         <Route path="/home" component={PageHome} />
         <Route path="/page-h5" component={PageH5} />
-        <Route path="/page-canvas" component={PageCanvas} />
+        <Route path="/page-bitfinex" component={PageBitfinex} />
         <Route path="/page-binance" component={PageBinance} />
       </Switch>
     </div>

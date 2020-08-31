@@ -1,7 +1,7 @@
 import ws from 'ws-wrapper';
 
 const parseSymbol = (symbol) => 
-  `t${symbol.split(':').join('')}`
+  `t${symbol.toUpperCase().replace(':','')}`
 
 const bind = (url, command, {onResponse, onSnapshot, onUpdate, onError}) => {
 
