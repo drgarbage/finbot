@@ -205,7 +205,6 @@ export const PressureView = (props) => {
         if(deltaUpdate < DELTA_MIN) deltaUpdate = DELTA_MIN;
         if(deltaUpdate > DELTA_MAX) deltaUpdate = DELTA_MAX;
         onDeltaChanged(deltaUpdate);
-        // setDelta(deltaUpdate);
       }}
       onMouseUp={e => {
         if(!dragStart) return;

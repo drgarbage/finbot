@@ -32,9 +32,6 @@ export const BookPressureView = (props) => {
     dataSource.subscribe({symbol}, data => {
       latestBook = {...latestBook, ...data};
     });
-    // subscribe({symbol:'BTC:USD'}, data => {
-    //   latestBook = {...latestBook, ...data};
-    // });
 
     setInterval(()=>{
       onBookUpdate(latestBook);

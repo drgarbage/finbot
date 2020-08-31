@@ -1,17 +1,3 @@
-// const aggTradeRs = {
-//   "e": "aggTrade",  // Event type
-//   "E": 123456789,   // Event time
-//   "s": "BNBBTC",    // Symbol
-//   "a": 12345,       // Aggregate trade ID
-//   "p": "0.001",     // Price
-//   "q": "100",       // Quantity
-//   "f": 100,         // First trade ID
-//   "l": 105,         // Last trade ID
-//   "T": 123456785,   // Trade time
-//   "m": true,        // Is the buyer the market maker?
-//   "M": true         // Ignore
-// }
-
 const updatePrice = (cache, price, amount) => {
   if(!cache[price])
     cache[price] = {price: 0, amount: 0, stamp: new Date()};
@@ -54,8 +40,7 @@ export const subscribe = ({symbol} , onUpdate) => {
     socket.send(JSON.stringify({
       "method": "SUBSCRIBE",
       "params": [
-        `${streamName}@bookTicker`,
-        // `${streamName}@depth`,
+        `${streamName}@bookTicker` // possible streams: @bookTicker @!bookTicker @depth5@100ms @depth10@100ms
       ],
       "id": 1
       }));
