@@ -62,16 +62,16 @@ const bind = (url, command, {onResponse, onSnapshot, onUpdate, onError}) => {
   });
 }
 
-export const subscribe = ({symbol}, onUpdate) => {
+export const subscribe = ({symbol, channel = 'book'}, onUpdate) => {
   // symbol := crypto : currency
   
   let url = 'wss://api-pub.bitfinex.com/ws/2';
   let command = {
-    event: 'subscribe', 
-    channel: 'book', 
+    event: "subscribe", 
+    channel: channel, 
     symbol: parseSymbol(symbol),
-    percision: 'P4',
-    length: "1000", 
+    // prec: "P0",
+    len: "100"
   };
   
   bind(url, command, {
@@ -83,7 +83,6 @@ export const subscribe = ({symbol}, onUpdate) => {
       snapshot.forEach(data => {
         output[data[0]] = { 
           price: parseFloat(data[0]), 
-          // count: parseInt(data[1]), 
           amount: parseFloat(data[2]), 
           stamp 
         };
@@ -95,7 +94,6 @@ export const subscribe = ({symbol}, onUpdate) => {
       let output = {};
       output[data[0]] = { 
         price: parseFloat(data[0]), 
-        // count: parseInt(data[1]), 
         amount: parseFloat(data[2]), 
         stamp: new Date() 
       };

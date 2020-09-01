@@ -1,16 +1,20 @@
 import React, {useState, useEffect} from 'react';
-import {subscribe} from '../core/data-sources/bitfinex';
 import {PressureView} from './pressure-view';
 import _ from 'lodash';
 
 const BUFFER_SIZE = 400;
 
 export const BookPressureView = (props) => {
-  const {width, height, symbol, dataSource, priceOffset } = props;
+  const {
+    width, height, 
+    symbol, dataSource, 
+    priceSteps, priceOffset, 
+    onPriceStepChanged, 
+    showHistory 
+  } = props;
 
   // data
   const [state, setState] = useState({book: {}, books: []});
-  const [delta, setDelta] = useState(20);
   const [deltaOffset] = useState(priceOffset || 1);
 
   const onBookUpdate = data => {
@@ -42,11 +46,12 @@ export const BookPressureView = (props) => {
     <PressureView
       width={width}
       height={height}
-      delta={delta}
+      delta={priceSteps}
       deltaOffset={deltaOffset}
       book={state.book}
       books={state.books}
-      onDeltaChanged={setDelta}
+      showHistory={showHistory}
+      onDeltaChanged={onPriceStepChanged}
       />
   );
 }

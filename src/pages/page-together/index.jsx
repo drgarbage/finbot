@@ -15,8 +15,16 @@ export const PageBinance = (props) => {
         priceSteps={steps}
         onPriceStepChanged={setSteps}
         priceOffset={1}
-        showHistory
-        width={800} 
+        width={300} 
+        height={800} />
+      <BookPressureView 
+        style={{background: 'black'}}
+        symbol="BTC:UST"
+        dataSource={{ subscribe: subscribeBitfinex }}
+        priceSteps={steps}
+        onPriceStepChanged={setSteps}
+        priceOffset={1}
+        width={300} 
         height={800} />
     </div>
   );

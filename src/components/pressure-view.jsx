@@ -40,6 +40,9 @@ const convertBlocks = (book, config) => {
   
   let arrangedBook = arrange(book);
   let dealedItem = _.find(arrangedBook, v => v.amount >= 0);
+
+  config.middle = delta - 1;
+
   if(!dealedItem) return [];
 
   let priceDealed = dealedItem.price;
@@ -50,6 +53,8 @@ const convertBlocks = (book, config) => {
   let digits = parseInt(decimalPlaces(deltaOffset)) + 2;
   let values = _.range(min, max, deltaOffset).map(v => _.round(v, digits));
   let blocks = values.map(v => ({price: v, cob: 0, cob_ag: 0})).reverse();
+
+  config.middle = middle;
 
   blocks.forEach(block => {
     block.cob = _(arrangedBook)
@@ -66,7 +71,9 @@ const convertBlocks = (book, config) => {
 
 const drawTable = (ctx, config, book) => {
   let blocks = convertBlocks(book, config);
+  
   if(blocks.length === 0) return;
+
   let {delta,deltaOffset,height} = config;
 
   let dplace = decimalPlaces(deltaOffset) + 2;
@@ -100,20 +107,49 @@ const drawTable = (ctx, config, book) => {
     ctx.fillRect(posX + fieldW*1, posY, fieldW * cobRate, fieldH);
     ctx.fillRect(posX + fieldW*2, posY, fieldW * cobAgRate, fieldH);
 
-    ctx.font = ['bold',`${fieldH > 20 ? 16 : parseInt(fieldH * 0.8)}px`,'Arial'].join('');
-    ctx.textBaseline = 'middle';  
-    ctx.fillStyle = 'white';
-    ctx.fillText(price, posX + 10, posTxtY, 100);
-    ctx.fillText(Math.abs(_.round(cob, dplace)), posX + fieldW*1 + 10, posTxtY, 100);
-    ctx.fillText(Math.abs(_.round(cob_ag, dplace)), posX + fieldW*2 + 10, posTxtY, 100);
+    ctx.restore();
+  });
 
-    if(index === delta-1){
-      ctx.strokeStyle = 'yellow';
-      ctx.strokeRect(posX, index * blockHeight, fieldW * 3, fieldH - 1);
+  blocks.forEach((block, index) => {
+    let { price, cob, cob_ag } = block;
+    let posX = fieldLeft;
+    let posY = index * blockHeight;
+    let posTxtY = index * blockHeight + blockHeight * 0.5;
+    let fieldW = 100;
+    let fieldH = blockHeight;
+    let cobRate = Math.abs(cob / cobMax);
+    let cobAgRate = Math.abs(cob_ag / cobAgMax);
+    let color = index < delta - 1 ? 'red' : 'green';
+
+    ctx.save();
+
+    if (fieldH > 20 || index % 5 == 0) {
+      ctx.font = '16px Arial';
+      ctx.textBaseline = 'middle';  
+      ctx.fillStyle = 'white';
+      ctx.fillText(price, posX + 10, posTxtY, 100);
+      ctx.fillText(Math.abs(_.round(cob, dplace)), posX + fieldW*1 + 10, posTxtY, 100);
+      ctx.fillText(Math.abs(_.round(cob_ag, dplace)), posX + fieldW*2 + 10, posTxtY, 100);
     }
 
     ctx.restore();
+
   });
+
+  ctx.save();
+  let index = _.findIndex(blocks, b => b.price === config.middle);
+  let centerY = index * blockHeight + blockHeight * 0.5;
+  let fieldW = 100;
+  let fieldH = 24;
+  ctx.fillStyle = '#333333';
+  ctx.fillRect(fieldLeft, centerY - fieldH/2, fieldW, fieldH);
+  ctx.fillStyle = 'white';
+  ctx.font = '16px Arial';
+  ctx.textBaseline = 'middle';  
+  ctx.fillText(config.middle, fieldLeft + 10, centerY, 100);
+  ctx.strokeStyle = 'yellow';
+  ctx.strokeRect(fieldLeft, centerY - fieldH/2, fieldW, fieldH);
+  ctx.restore();
 }
 
 const drawDepth = (ctx, config, book) => {
@@ -164,7 +200,8 @@ const drawHistory = (ctx, config, books) => {
 const draw = (ctx, config, state) => {
   let {book, books} = state;
   drawTable(ctx, config, book);
-  drawHistory(ctx, config, books);
+  if(state.showHistory)
+    drawHistory(ctx, config, books);
 }
 
 export const PressureView = (props) => {
@@ -173,8 +210,9 @@ export const PressureView = (props) => {
     book, books, 
     delta, deltaOffset,
     onDeltaChanged, onDeltaOffsetChanged, 
+    showHistory = false
   } = props;
-  const state = { book, books };
+  const state = { book, books, showHistory };
 
   const canvasRef = useRef(null);
   const [dragStart, setDragStart] = useState(null);
