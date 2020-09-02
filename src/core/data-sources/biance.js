@@ -1,27 +1,28 @@
 const API_BASE = 'https://www.binance.com/api/v3/';
-const updatePrice = (cache, price, amount, scale = 1) => {
+const updatePrice = (cache, price, amount, type) => {
   if(!cache[price])
     cache[price] = {price: 0, amount: 0, stamp: new Date()};
   let updateItem = cache[price];
+  updateItem.type = type;
   updateItem.price = parseFloat(price);
-  updateItem.amount = parseFloat(amount) * scale;
-  updateItem.stamp = new Date(); 
+  updateItem.amount = parseFloat(amount) * ((type == 'ask') ? -1 : 1) ;
+  updateItem.stamp = new Date().valueOf(); 
 }
 
 const bookParser = (json) => {
   let updateData = { id: json.u };
-  updatePrice(updateData, json.b, json.B, 1);
-  updatePrice(updateData, json.a, json.A, -1);
+  updatePrice(updateData, json.b, json.B, 'bid');
+  updatePrice(updateData, json.a, json.A, 'ask');
   return updateData;
 }
 
 const depthParser = (json) => {
   let updateData = { id: json.lastUpdateId };
   json.bids.forEach(pair => {
-    updatePrice(updateData, pair[0], pair[1], 1);
+    updatePrice(updateData, pair[0], pair[1], 'bid');
   });
   json.asks.forEach(pair => {
-    updatePrice(updateData, pair[0], pair[1], -1);
+    updatePrice(updateData, pair[0], pair[1], 'ask');
   });
   return updateData;
 }

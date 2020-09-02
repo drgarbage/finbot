@@ -1,5 +1,14 @@
 import ws from 'ws-wrapper';
 
+// subscribe to channel
+// receive the book snapshot and create your in-memory book structure
+// when count > 0 then you have to add or update the price level
+// 3.1 if amount > 0 then add/update bids
+// 3.2 if amount < 0 then add/update asks
+// when count = 0 then you have to delete the price level.
+// 4.1 if amount = 1 then remove from bids
+// 4.2 if amount = -1 then remove from asks
+
 const parseSymbol = (symbol) => 
   `t${symbol.toUpperCase().replace(':','')}`
 
@@ -70,7 +79,6 @@ export const subscribe = ({symbol, channel = 'book'}, onUpdate) => {
     event: "subscribe", 
     channel: channel, 
     symbol: parseSymbol(symbol),
-    // prec: "P0",
     len: "100"
   };
   
@@ -79,10 +87,12 @@ export const subscribe = ({symbol, channel = 'book'}, onUpdate) => {
     onSnapshot: (channel, snapshot) => {
       // snapshot: [ [price, count, amount] ]
       let output = {};
-      let stamp = new Date();
+      let stamp = new Date().valueOf();
       snapshot.forEach(data => {
         output[data[0]] = { 
+          type: parseFloat(data[2]) > 0 ? 'bid' : 'ask',
           price: parseFloat(data[0]), 
+          count: parseInt(data[1]),
           amount: parseFloat(data[2]), 
           stamp 
         };
@@ -93,9 +103,11 @@ export const subscribe = ({symbol, channel = 'book'}, onUpdate) => {
       // data: [price, count, amount]
       let output = {};
       output[data[0]] = { 
+        type: parseFloat(data[2]) < 0 ? 'bid' : 'ask',
         price: parseFloat(data[0]), 
+        count: parseInt(data[1]),
         amount: parseFloat(data[2]), 
-        stamp: new Date() 
+        stamp: new Date().valueOf() 
       };
       onUpdate(output);
     }
