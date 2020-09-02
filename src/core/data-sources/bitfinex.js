@@ -49,6 +49,8 @@ const bind = (url, command, {onResponse, onSnapshot, onUpdate, onError}) => {
         return;
       }
 
+      console.log(evt.data);
+
     } catch (error) {
 
       if(onError)
