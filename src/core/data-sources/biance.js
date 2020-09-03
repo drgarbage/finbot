@@ -5,7 +5,7 @@ const updatePrice = (cache, price, amount, type) => {
   let updateItem = cache[price];
   updateItem.type = type;
   updateItem.price = parseFloat(price);
-  updateItem.amount = parseFloat(amount) * ((type == 'ask') ? -1 : 1) ;
+  updateItem.amount = parseFloat(amount) * ((type === 'ask') ? -1 : 1) ;
   updateItem.stamp = new Date().valueOf(); 
 }
 

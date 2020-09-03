@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Route, Link, Switch } from 'react-router-dom';
 import { PageH5 } from './pages/page-h5';
 import { PageBitfinex } from './pages/page-bitfinex';
 import { PageBinance } from './pages/page-binance';
+import { PageBookViewer } from './pages/page-book-viewer';
 
 import './App.css';
 
@@ -28,6 +29,9 @@ export default ()=>
         <li>
           <Link to="/page-binance">BINANCE</Link>
         </li>
+        <li>
+          <Link to="/page-book-viewer">BOOK VIEWER</Link>
+        </li>
       </ul>
     </nav>
 
@@ -37,6 +41,7 @@ export default ()=>
         <Route path="/page-h5" component={PageH5} />
         <Route path="/page-bitfinex" component={PageBitfinex} />
         <Route path="/page-binance" component={PageBinance} />
+        <Route path="/page-book-viewer" component={PageBookViewer} />
       </Switch>
     </div>
   </Router>

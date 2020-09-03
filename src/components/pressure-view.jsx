@@ -3,7 +3,7 @@ import {decimalPlaces} from '../core/utils';
 import _ from 'lodash';
 
 const DELTA_MIN = 5;
-const DELTA_MAX = 100;
+const DELTA_MAX = 1000;
 
 const sum = (list, index, middle) => {
 
@@ -79,16 +79,16 @@ const drawTable = (ctx, config, book) => {
   let dplace = decimalPlaces(deltaOffset) + 2;
 
   let blockHeight = height / blocks.length;
-  let cobMax = _.maxBy(blocks, b => b.cob).cob;
-  let cobAgMax = _.maxBy(blocks, b => b.cob_ag).cob_ag;
+  let cobMax = Math.abs(_.maxBy(blocks, b => Math.abs(b.cob)).cob);
+  let cobAgMax = Math.abs(_.maxBy(blocks, b => Math.abs(b.cob_ag)).cob_ag);
 
   let fieldLeft = config.width - 300;
 
   blocks.forEach((block, index) => {
-    let { price, cob, cob_ag } = block;
+    let { cob, cob_ag } = block; // let { price, cob, cob_ag } = block;
     let posX = fieldLeft;
     let posY = index * blockHeight;
-    let posTxtY = index * blockHeight + blockHeight * 0.5;
+    // let posTxtY = index * blockHeight + blockHeight * 0.5;
     let fieldW = 100;
     let fieldH = blockHeight;
     let cobRate = Math.abs(cob / cobMax);
@@ -113,20 +113,20 @@ const drawTable = (ctx, config, book) => {
   blocks.forEach((block, index) => {
     let { price, cob, cob_ag } = block;
     let posX = fieldLeft;
-    let posY = index * blockHeight;
+    // let posY = index * blockHeight;
     let posTxtY = index * blockHeight + blockHeight * 0.5;
     let fieldW = 100;
     let fieldH = blockHeight;
-    let cobRate = Math.abs(cob / cobMax);
-    let cobAgRate = Math.abs(cob_ag / cobAgMax);
-    let color = index < delta - 1 ? 'red' : 'green';
+    // let cobRate = Math.abs(cob / cobMax);
+    // let cobAgRate = Math.abs(cob_ag / cobAgMax);
+    // let color = index < delta - 1 ? 'red' : 'green';
 
     ctx.save();
 
-    if (fieldH > 20 || index % 5 == 0) {
+    if (fieldH > 20 || index % 5 === 0) {
       ctx.font = '16px Arial';
       ctx.textBaseline = 'middle';  
-      ctx.fillStyle = 'white';
+      ctx.fillStyle = 'silver';
       ctx.fillText(price, posX + 10, posTxtY, 100);
       ctx.fillText(Math.abs(_.round(cob, dplace)), posX + fieldW*1 + 10, posTxtY, 100);
       ctx.fillText(Math.abs(_.round(cob_ag, dplace)), posX + fieldW*2 + 10, posTxtY, 100);
@@ -206,15 +206,17 @@ const draw = (ctx, config, state) => {
 
 export const PressureView = (props) => {
   const { 
-    width, height, 
-    book, books, 
-    delta, deltaOffset,
-    onDeltaChanged, onDeltaOffsetChanged, 
-    showHistory = false
+    width = 300, height = 300, 
+    book = {}, books = [], 
+    delta = 20, deltaOffset = 1,
+    showHistory = false,
+    onDeltaChanged = () => {}, 
+    // onDeltaOffsetChanged = () => {}, 
   } = props;
   const state = { book, books, showHistory };
 
   const canvasRef = useRef(null);
+  const [internalDelta, setInternalDelta] = useState(delta);
   const [dragStart, setDragStart] = useState(null);
 
   useEffect(()=>{
@@ -222,7 +224,7 @@ export const PressureView = (props) => {
     const ctx = canvasObj.getContext('2d');
     ctx.clearRect(0,0,width,height);
 
-    draw(ctx, {delta,deltaOffset,width,height}, state);
+    draw(ctx, {delta: internalDelta,deltaOffset,width,height}, state);
   });  
 
   return (
@@ -231,22 +233,25 @@ export const PressureView = (props) => {
       ref={canvasRef}
       width={width}
       height={height}
-      onMouseDown={e => {
-        setDragStart({delta: delta, x: e.clientX, y: e.clientY})
+      onPointerDownCapture={e => {
+        setDragStart({delta: internalDelta, x: e.clientX, y: e.clientY});
+        canvasRef.current.setPointerCapture(e.pointerId);
       }}
-      onMouseMove={e => {
+      onPointerMoveCapture={e => {
         if(!dragStart) return;
         let offsetDirection = (dragStart.y > height / 2) ? -1 : 1;
         let cur = {x: e.clientX, y:e.clientY};
-        let deltaOffset = parseInt((cur.y - dragStart.y) * 0.5);
+        let deltaOffset = parseInt((cur.y - dragStart.y) * 0.5 * 0.5);
         let deltaUpdate = dragStart.delta + offsetDirection * deltaOffset;
         if(deltaUpdate < DELTA_MIN) deltaUpdate = DELTA_MIN;
         if(deltaUpdate > DELTA_MAX) deltaUpdate = DELTA_MAX;
+        setInternalDelta(deltaUpdate);
         onDeltaChanged(deltaUpdate);
       }}
-      onMouseUp={e => {
+      onPointerUpCapture={e => {
         if(!dragStart) return;
         setDragStart(null);
+        canvasRef.current.releasePointerCapture(e.pointerId);
       }}
     ></canvas>
   );

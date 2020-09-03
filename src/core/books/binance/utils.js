@@ -20,7 +20,7 @@ export const parseDepth = (obj) => {
     output.asks[price] = {
       type: 'asks',
       price: parseFloat(price),
-      amount: parseFloat(amount),
+      amount: -parseFloat(amount),
       stamp
     };
   });
@@ -28,10 +28,33 @@ export const parseDepth = (obj) => {
   return output;
 }
 
-export const parseDiffDepth = (obj, lastUpdateId = 0) => {
-  let output = {id:lastUpdateId, bids: {}, asks: {}};
-  let idBegin = obj.U;
-  let idEnd = obj.u;
+export const parseDiffDepth = (obj) => {
+  let output = {id:obj.U, bids: {}, asks: {}};
+  // let idBegin = obj.U;
+  // let idEnd = obj.u;
+  let stamp = new Date().valueOf();
+
+  obj.b.forEach(pair => {
+    let [price, amount] = pair;
+    output.bids[price] = {
+      type: 'bids',
+      price: parseFloat(price),
+      amount: parseFloat(amount),
+      stamp
+    }
+  });
+
+  obj.a.forEach(pair => {
+    let [price, amount] = pair;
+    output.asks[price] = {
+      type: 'asks',
+      price: parseFloat(price),
+      amount: -parseFloat(amount),
+      stamp
+    }
+  });
+  
+  return output;
 }
 
 export const parseBookTicker = (obj) => {
@@ -46,7 +69,7 @@ export const parseBookTicker = (obj) => {
   output.asks[obj.a] = {
     type: 'asks',
     price: parseFloat(obj.a),
-    amount: parseFloat(obj.A),
+    amount: -parseFloat(obj.A),
     stamp
   }
   return output;
@@ -54,7 +77,7 @@ export const parseBookTicker = (obj) => {
 
 export const loadSnapshot = async (symbol) => {
   let cors = 'https://cors-anywhere.herokuapp.com/'; // use cors-anywhere to fetch api data
-  let url = `${cors}${API_BASE}depth?symbol=${symbol.toUpperCase()}&limit=1000`;
+  let url = `${cors}https://www.binance.com/api/v3/depth?symbol=${symbol.toUpperCase()}&limit=1000`;
   let res = await fetch(url);
   let json = await res.json();
   return json;

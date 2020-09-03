@@ -1,8 +1,8 @@
-const model = {
-  id: 0,
-  bids: {},
-  asks: {}
-}
+// const model = {
+//   id: 0,
+//   bids: {},
+//   asks: {}
+// }
 
 export class Book {
   connect(symbol){}

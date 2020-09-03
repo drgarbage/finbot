@@ -2,8 +2,9 @@ import {Book} from '../';
 import {
   parseSymbol,
   parseDepth,
+  parseDiffDepth,
+  parseBookTicker,
   loadSnapshot,
-  parseDepth,
   isBookDepthPayload,
   isDiffDepthPayload,
   isBookTickerPayload
@@ -39,6 +40,7 @@ export class BinanceBook extends Book {
     const onResponse = (obj) => {
       if(obj.id !== requestId)
         return onError(new Error('Subscribtion Failed.'));
+      console.info('Biance connected: ', symbol);
     }
     const onSnapshot = (obj) => {
       this.data = obj;
@@ -52,7 +54,25 @@ export class BinanceBook extends Book {
       if(obj.id < this.data.id)
         return;
 
-      obj.bids.forEach()
+      for(let price in obj.bids) {
+        let data = obj.bids[price];
+        if(data.amount === 0){
+          delete this.data.bids[price];
+          continue;
+        }
+        
+        this.data.bids[price] = data;
+      }
+
+      for(let price in obj.asks) {
+        let data = obj.asks[price];
+        if(data.amount === 0){
+          delete this.data.asks[price];
+          continue;
+        }
+        
+        this.data.asks[price] = data;
+      }
     }
     const onError = (obj) => {}
 
@@ -97,7 +117,7 @@ export class BinanceBook extends Book {
   }
 
   disconnect(){
-    this.socket?.close();
+    this.socket && this.socket.close();
   }
 
   snapshot(){

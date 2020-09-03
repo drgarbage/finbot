@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import {subscribe as subscribeBinance} from '../../core/data-sources/biance';
-import {subscribe as subscribeBitfinex} from '../../core/data-sources/bitfinex';
+import {subscribe} from '../../core/data-sources/biance';
 import {BookPressureView} from '../../components/book-pressure-view';
 
-export const PageBinance = (props) => {
+export const PageBinance = () => {
   const [steps, setSteps] = useState(10);
   return (
     <div style={styles.container}>
@@ -11,7 +10,7 @@ export const PageBinance = (props) => {
         style={{background: 'black'}}
         symbol="BTC:USDT"
         channel="depth20@100ms"
-        dataSource={{ subscribe: subscribeBinance }}
+        dataSource={{ subscribe }}
         priceSteps={steps}
         onPriceStepChanged={setSteps}
         priceOffset={1}
