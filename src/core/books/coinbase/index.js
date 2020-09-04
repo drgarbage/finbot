@@ -1,0 +1,119 @@
+import {Book} from '../';
+import { crosFetch } from '../../utils';
+import { 
+  parseSymbol, 
+  parseSnapshot,
+  parseUpdate, 
+} from './utils';
+import {  } from '../bitfinex/utils';
+
+export class CoinbaseBook extends Book {
+  constructor() {
+    super();
+    this.socket = null;
+    this.data = null;
+    this.refresh = null;
+  }
+  connect(symbol) {
+    let url = 'wss://ws-feed.pro.coinbase.com';
+    let snapshotUrl = 'https://api.pro.coinbase.com/products/BTC-USD/book?level=3';
+    let cmd = {
+      type: "subscribe",
+      product_ids: [ parseSymbol(symbol)],
+      channels: ["level2"]
+    }
+
+    const onResponse = (obj) => {
+    }
+    const onSnapshot = (obj) => {
+      this.data = parseSnapshot(obj);
+    }
+    const onUpdate = (obj) => {
+      // let update = parseUpdate(obj);
+
+      const smap = {"buy": "bids","sell": "asks"};
+      const rmap = {"buy": 1,"sell": -1};
+
+      obj.changes.forEach(change => {
+        let [side, priceStr, amountStr] = change;
+        let type = smap[side];
+        let price = parseFloat(priceStr);
+        let amount = parseFloat(amountStr);
+        let stamp = new Date(obj.time).valueOf();
+
+        if(amount === 0)
+          return delete this.data[type][priceStr];
+        
+        if(!(priceStr in this.data[type]))
+          return this.data[type][priceStr] = {
+            type, price, amount, stamp
+          };
+
+        let item = this.data[type][priceStr];
+        item.amount = amount * rmap[side];
+        item.stamp = stamp;
+      });
+    }
+    const onError = (error) => {
+      console.error(error.message);
+    }
+
+    // regular full sync
+    // let syncFullSnapshot = async () => {
+    //   try{
+    //     let rep = await crosFetch(snapshotUrl);
+    //     let json = await rep.json();
+    //     onSnapshot([channelId || 0, json]);
+    //   }catch(error){
+    //     console.error(error.message);
+    //   }
+    // }
+    // let refresh = setInterval(syncFullSnapshot, 10000);
+    // this.refresh = refresh;
+    // syncFullSnapshot();
+
+    // stream
+    let socket = new WebSocket(url);
+
+    socket.onmessage = (evt) => {
+      try{
+
+        let json = JSON.parse(evt.data);
+
+        if(!json.type) return;
+
+        if(json.type === 'snapshot')
+          return onSnapshot(json);
+
+        if(json.type === 'l2update')
+          return onUpdate(json);
+        
+        return onResponse(json);
+  
+      }catch(error){onError(error);}
+    };
+
+    socket.onopen = (evt) => {
+      try{
+        socket.send(JSON.stringify(cmd))
+      } catch (error) {onError(error);}
+    };
+
+    socket.onclose = (evt) => {
+      this.socket = null;
+      this.data = null;
+    };
+
+    this.socket = socket;
+    
+  }
+  disconnect(){
+    this.socket && this.socket.close();
+    this.refresh && clearInterval(this.refresh);
+    this.socket = null;
+    this.refresh = null;
+  }
+  snapshot(){
+    return this.data || {};
+  }
+}

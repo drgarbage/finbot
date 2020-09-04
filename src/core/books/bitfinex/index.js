@@ -1,4 +1,5 @@
 import {Book} from '../';
+import { crosFetch } from '../../utils';
 import {
   parseSymbol,
   isSnapshot,
@@ -11,22 +12,25 @@ export class BitfinexBook extends Book {
     super();
     this.socket = null;
     this.data = null;
+    this.refresh = null;
   }
   connect(symbol) {
     let url = 'wss://api-pub.bitfinex.com/ws/2'
+    let snapshotUrl = 'https://api-pub.bitfinex.com/v2/book/tBTCUSD/P0?_full=1';
     let cmd = {
       event: 'subscribe',
       channel: 'book',
       symbol: parseSymbol(symbol),
       len: '100'
     }
-    let socket = new WebSocket(url);
     let channelId = null;
+
 
     const onResponse = (obj) => {
       // if(obj.event !== 'subscribed') 
       //   return onError(new Error('Subscribtion Failed.'));
-      channelId = obj.chenId;
+      if(obj.chanId)
+        channelId = obj.chanId;
     }
     const onSnapshot = (obj) => {
       this.data = parseSnapshot(obj);
@@ -34,14 +38,14 @@ export class BitfinexBook extends Book {
     const onUpdate = (obj) => {
       if(!this.data) return;
 
-      let [channelId, value] = obj;
+      let [chanId, value] = obj;
       let [price, count, amount] = value;
       let stamp = new Date().valueOf();
       let key = `${price}`;
       let type = amount < 0 ? 'asks' : 'bids';
 
-      if(channelId !== this.data.id)
-        throw new Error('Channel ID changed unexpected.');
+      // if(chanId !== channelId)
+      //   this.data = {id: chanId, bids: {}, asks: {}};
 
       if(count <= 0)
         return delete this.data[type][key];
@@ -59,6 +63,23 @@ export class BitfinexBook extends Book {
     const onError = (error) => {
       console.error(error.message);
     }
+
+    // regular full sync
+    let syncFullSnapshot = async () => {
+      try{
+        let rep = await crosFetch(snapshotUrl);
+        let json = await rep.json();
+        onSnapshot([channelId || 0, json]);
+      }catch(error){
+        console.error(error.message);
+      }
+    }
+    let refresh = setInterval(syncFullSnapshot, 10000);
+    this.refresh = refresh;
+    syncFullSnapshot();
+
+    // stream
+    let socket = new WebSocket(url);
 
     socket.onmessage = (evt) => {
       try{
@@ -88,9 +109,13 @@ export class BitfinexBook extends Book {
     };
 
     this.socket = socket;
+    
   }
   disconnect(){
     this.socket && this.socket.close();
+    this.refresh && clearInterval(this.refresh);
+    this.socket = null;
+    this.refresh = null;
   }
   snapshot(){
     return this.data || {};

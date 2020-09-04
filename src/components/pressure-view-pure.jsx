@@ -1,9 +1,29 @@
 import React, {useRef, useState, useEffect} from 'react';
+import {decimalPlaces} from '../core/utils';
 import _ from 'lodash';
 
 const DELTA_MIN = 10;
 const DELTA_MAX = 9999;
 const GAPS = [1000,500,100,50,10,5,1,0.5,0.05,0.005,0.0005,0.00005].reverse();
+
+const groupPrice = (price, gap) =>{
+  let dplace = decimalPlaces(gap);
+  let scale = parseFloat(Math.pow(10, dplace));
+  let valueScaled = price * scale;
+  let doScaled = gap * scale;
+  return Math.round(parseInt(valueScaled / doScaled) * doScaled) / scale;
+}
+
+const mountToGroup = (price, amount, stackedAmount, groups, context) => {
+  let priceAdj = groupPrice(price, context.price.gap);
+  let key = `${priceAdj}`;
+  
+  if(!(key in groups))
+    return groups[key] = {amount, stackedAmount};
+  
+  groups[key].amount += amount;
+  groups[key].stackedAmount += stackedAmount;
+}
 
 const findBestGap = (delta, height, textSize) => {
   let rowHeight = height / (delta*2);
@@ -48,13 +68,21 @@ const drawBar = (ctx, value, sumValue, {price, scale}) => {
   ctx.fillRect( 200, posY, sumValue, price.unit);
 }
 
-const drawPriceLabel = (ctx, {price, scale}) => {
+const drawPriceLabel = (ctx, {price, scale}, groups) => {
   for(let p = _.round(price.min); p < price.max ; p += 1) {
     if(p % price.gap !== 0) continue;
+    let posY = (p - price.origin) * scale.y;
     ctx.fillStyle = 'silver';
     ctx.font = `${price.fontSize}px Arial`;
     ctx.textBaseline = 'middle';  
-    ctx.fillText(p, 0, (p - price.origin) * scale.y);
+    ctx.fillText(p, 0, posY);
+
+    let priceKey = `${p}`;
+    if(priceKey in groups){
+      let group = groups[priceKey];
+      ctx.fillText(Math.abs(_.round(group.amount, decimalPlaces(price.gap) + 2)), 110, posY);
+      ctx.fillText(_.round(group.stackedAmount, decimalPlaces(price.gap) + 2), 210, posY);
+    }
   }
 }
 
@@ -85,6 +113,7 @@ const drawBook = (ctx, {delta, width, height}, book) => {
     }
   }
   let center = {x: 0, y: height * 0.5};
+  let groups = {};
 
   ctx.save();
   ctx.translate(center.x, center.y);
@@ -92,30 +121,48 @@ const drawBook = (ctx, {delta, width, height}, book) => {
   // drawGrid(ctx);
 
   let sumBids = 0;
-  ctx.fillStyle = 'green';
+  ctx.fillStyle = '#00ff0033';
   sortedBids.forEach(value => {
     if(!priceInRange(value.price, context)) return;
     sumBids+=Math.abs(value.amount);
     drawBar(ctx, value, sumBids, context);
+    mountToGroup(value.price, value.amount, sumBids, groups, context);
   });
       
   let sumAsks = 0;
-  ctx.fillStyle = 'red';
+  ctx.fillStyle = '#ff000033';
   sortedAsks.reverse().forEach(value => {
     if(!priceInRange(value.price, context)) return;
     sumAsks+=Math.abs(value.amount);
     drawBar(ctx, value, sumAsks, context);
+    mountToGroup(value.price, value.amount, sumAsks, groups, context);
   });
 
-  drawPriceLabel(ctx, context);
+  drawPriceLabel(ctx, context, groups);
       
   ctx.restore();
+
+  console.log(width);
   
+  let posX = width - 150;
+  let posY = 40;
+  ctx.fillStyle = '#00000088';
+  ctx.fillRect(posX - 10, posY - 20, 150, 130);
   ctx.fillStyle = 'white';
-  ctx.fillText(`SCALE: ( ${context.scale.x} , ${context.scale.y} )`, width - 100, 40);
-  ctx.fillText(`ORIGIN: ${priceOrigin}`, width - 100, 60);
-  ctx.fillText(`PRICE MAX: ${priceMax}`, width - 100, 80);
-  ctx.fillText(`PRICE MIN: ${priceMin}`, width - 100, 100);
+  ctx.fillText(`SCALE: ( ${context.scale.x} , ${context.scale.y} )`, posX, posY);
+  ctx.fillText(`ORIGIN: ${priceOrigin}`, posX, posY+=20);
+  ctx.fillText(`PRICE MAX: ${priceMax}`, posX, posY+=20);
+  ctx.fillText(`PRICE MIN: ${priceMin}`, posX, posY+=20);
+  
+  if(sortedAsks.length > 0)
+    ctx.fillText(
+      `ASKS: ${_.first(sortedAsks).price} - ${_.last(sortedAsks).price}`, 
+      posX, posY+=20 );
+
+  if(sortedBids.length > 0)
+    ctx.fillText(
+      `BIDS: ${_.first(sortedBids).price} - ${_.last(sortedBids).price}`, 
+      posX, posY+=20 );
 
 };
 

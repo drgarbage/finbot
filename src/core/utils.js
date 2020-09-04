@@ -7,3 +7,8 @@ export const decimalPlaces = (number) => {
   // return ((+number).toFixed(20)).replace(/^-?\d*\.?|0+$/g, '').length;
   return ((+number).toFixed(15)).replace(/^-?\d*\.?|0+$/g, '').length;
 }
+
+export const crosFetch = (url, options = {}) => {
+  let cors = 'https://cors-anywhere.herokuapp.com/';
+  return fetch(`${cors}${url}`, options);
+}

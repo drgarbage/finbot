@@ -13,7 +13,7 @@ import {
 // How to manage a local order book correctly
 // 1. Open a stream to wss://stream.binance.com:9443/ws/bnbbtc@depth.
 // 2. Buffer the events you receive from the stream.
-// 3. Get a depth snapshot from https://www.binance.com/api/v3/depth?symbol=BNBBTC&limit=1000 .
+// 3. Get a depth snapshot from https://www.binance.com/api/v3/depth?symbol=BNBBTC&limit=5000 .
 // 4. Drop any event where u is <= lastUpdateId in the snapshot.
 // 5. The first processed event should have U <= lastUpdateId+1 AND u >= lastUpdateId+1.
 // 6. While listening to the stream, each new event's U should be equal to the previous event's u+1.
