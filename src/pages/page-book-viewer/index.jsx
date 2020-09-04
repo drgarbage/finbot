@@ -45,11 +45,13 @@ export const PageBookViewer = (props) => {
     console.info('connect');
     bitfinex.current.connect('BTC:UST');
     binance.current.connect('BTC:USDT');
+    coinbase.current.connect('BTC:USD');
   }
   const disconnect = () => {
     console.info('disconnect');
     bitfinex.current.disconnect();
     binance.current.disconnect();
+    coinbase.current.disconnect();
   }
   return (
     <div>

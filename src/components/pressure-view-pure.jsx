@@ -65,7 +65,7 @@ const drawBar = (ctx, value, sumValue, {price, scale}) => {
   let posY = (value.price - price.origin) * scale.y;
   let amountWidth = Math.abs(value.amount) * scale.x;
   ctx.fillRect( 100, posY, amountWidth, price.unit);
-  ctx.fillRect( 200, posY, sumValue, price.unit);
+  ctx.fillRect( 200, posY, sumValue * scale.x * 0.01, price.unit);
 }
 
 const drawPriceLabel = (ctx, {price, scale}, groups) => {
@@ -86,7 +86,7 @@ const drawPriceLabel = (ctx, {price, scale}, groups) => {
   }
 }
 
-const drawBook = (ctx, {delta, width, height}, book) => {
+const drawBook = (ctx, {delta, width, height, zoom}, book) => {
   let sortedAsks = _(book.asks).sortBy('price').reverse().value();
   let sortedBids = _(book.bids).sortBy('price').reverse().value();
   let firstBid = sortedBids[0];
@@ -108,7 +108,7 @@ const drawBook = (ctx, {delta, width, height}, book) => {
       fontSize: 16,
     },
     scale: {
-      x: 10,
+      x: zoom,
       y: priceToScreenUnit * -1
     }
   }
@@ -166,9 +166,9 @@ const drawBook = (ctx, {delta, width, height}, book) => {
 
 };
 
-const draw = (ctx, {delta, width, height}, books) => {
+const draw = (ctx, {delta, width, height, zoom}, books) => {
   if(books.length > 0)
-    drawBook(ctx, {delta, width, height}, books[0]);
+    drawBook(ctx, {delta, width, height, zoom}, books[0]);
 };
 
 export const PressureViewPure = (props) => {
@@ -178,6 +178,7 @@ export const PressureViewPure = (props) => {
 
   const canvasRef = useRef(null);
   const [delta, setDelta] = useState(10);
+  const [zoom, setZoom] = useState(10);
   const [dragStart, setDragStart] = useState(null);
 
   useEffect(()=>{
@@ -185,7 +186,7 @@ export const PressureViewPure = (props) => {
     const ctx = canvasObj.getContext('2d');
     ctx.clearRect(0,0,width,height);
 
-    draw(ctx, {delta,width,height}, books);
+    draw(ctx, {delta,width,height,zoom}, books);
   });  
 
   return (
@@ -203,13 +204,18 @@ export const PressureViewPure = (props) => {
         let cur = {x: e.clientX, y:e.clientY};
 
         let direction = (dragStart.y > height / 2) ? -1 : 1;
-        let offset = (cur.y - dragStart.y) * 0.5 * 0.5;
-        let nextDelta = dragStart.delta + offset * direction;
+        let offsetY = cur.y - dragStart.y;
+        let offsetX = cur.x - dragStart.x;
+        let nextDelta = dragStart.delta + offsetY * delta * 0.005 * direction;
+        let nextZoom = zoom + offsetX * 0.01;
 
         if(nextDelta < DELTA_MIN) nextDelta = DELTA_MIN;
         if(nextDelta > DELTA_MAX) nextDelta = DELTA_MAX;
+        if(nextZoom < 0.0001) nextZoom = 0.0001;
+        if(nextZoom > 99999) nextZoom = 99999;
 
         setDelta(nextDelta);
+        setZoom(nextZoom);
       }}
       onPointerUpCapture={e => {
         if(!dragStart) return;
