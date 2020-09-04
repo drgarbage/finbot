@@ -1,3 +1,4 @@
+// deprecated
 import React from 'react';
 import {BookPressureView} from '../../components/book-pressure-view';
 import {subscribe} from '../../core/data-sources/bitfinex'

@@ -1,3 +1,4 @@
+// deprecated
 import React, { useRef, useState, useEffect } from 'react';
 import {decimalPlaces} from '../core/utils';
 import _ from 'lodash';

@@ -1,3 +1,5 @@
+// deprecated
+
 import ws from 'ws-wrapper';
 
 // subscribe to channel

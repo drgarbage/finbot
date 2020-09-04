@@ -1,3 +1,5 @@
+// deprecated
+
 const API_BASE = 'https://www.binance.com/api/v3/';
 const updatePrice = (cache, price, amount, type) => {
   if(!cache[price])

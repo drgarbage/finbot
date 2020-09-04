@@ -1,3 +1,4 @@
+// deprecated
 import React, { useState } from 'react';
 import {subscribe as subscribeBinance} from '../../core/data-sources/biance';
 import {subscribe as subscribeBitfinex} from '../../core/data-sources/bitfinex';

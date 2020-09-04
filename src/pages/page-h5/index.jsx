@@ -1,3 +1,4 @@
+// deprecated
 import React, {useEffect, useState} from 'react';
 import {subscribeBook, subscribeRawBook} from '../../core/applications';
 import _ from 'lodash';

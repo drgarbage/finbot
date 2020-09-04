@@ -1,3 +1,4 @@
+// deprecated
 import ws from 'ws-wrapper';
 
 export const subscribe = (url, command, {onResponse, onSnapshot, onUpdate, onError}) => {
