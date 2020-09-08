@@ -5,6 +5,7 @@ import { PageBitfinex } from './pages/page-bitfinex';
 import { PageBinance } from './pages/page-binance';
 import { PageCoinBase } from './pages/page-coinbase';
 import { PageBookViewer } from './pages/page-book-viewer';
+import { PageBookViewerV2 } from './pages/page-book-viewer-v2';
 
 import './App.css';
 
@@ -37,6 +38,9 @@ export default ()=>
         <li>
           <Link to="/page-book-viewer">BOOK VIEWER</Link>
         </li>
+        <li>
+          <Link to="/page-book-viewer-v2">BOOK VIEWER II</Link>
+        </li>
       </ul>
     </nav>
 
@@ -48,6 +52,7 @@ export default ()=>
         <Route path="/page-binance" component={PageBinance} />
         <Route path="/page-coinbase" component={PageCoinBase} />
         <Route path="/page-book-viewer" component={PageBookViewer} />
+        <Route path="/page-book-viewer-v2" component={PageBookViewerV2} />
       </Switch>
     </div>
   </Router>

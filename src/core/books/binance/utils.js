@@ -1,5 +1,14 @@
-export const parseSymbol = (symbol) =>
-  symbol.toLowerCase().replace(':','');
+const Symbols = {
+  "BTC:USD": "btcusdt", // usd not support
+  "BTC:USDT": "btcusdt",
+  "ETH:USD": "ethusdt", // usd not support
+  "ETH:USDT": "ethusdt",
+}
+
+export const parseSymbol = (symbol) =>{
+  if(!(symbol in Symbols)) throw new Error("Symbol not supported.");
+  return Symbols[symbol];
+}
 
 export const parseDepth = (obj) => {
   let output = {id: obj.lastUpdateId, bids: {}, asks: {}};

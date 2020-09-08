@@ -15,6 +15,7 @@ export class CoinbaseBook extends Book {
     this.refresh = null;
   }
   connect(symbol) {
+    if(this.socket) return;
     let url = 'wss://ws-feed.pro.coinbase.com';
     let snapshotUrl = 'https://api.pro.coinbase.com/products/BTC-USD/book?level=3';
     let cmd = {
@@ -24,6 +25,7 @@ export class CoinbaseBook extends Book {
     }
 
     const onResponse = (obj) => {
+      console.info('Coinbase connected: ', symbol);
     }
     const onSnapshot = (obj) => {
       this.data = parseSnapshot(obj);

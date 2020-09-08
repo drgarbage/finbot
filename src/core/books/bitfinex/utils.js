@@ -1,5 +1,14 @@
-export const parseSymbol = (symbol) =>
-  `t${symbol.toUpperCase().replace(':','')}`;
+const Symbols = {
+  "BTC:USD": "tBTCUSD",
+  "BTC:USDT": "tBTCUST",
+  "ETH:USD": "tETHUSD",
+  "ETH:USDT": "tETHUST",
+}
+
+export const parseSymbol = (symbol) =>{
+  if(!(symbol in Symbols)) throw new Error("Symbol not supported.");
+  return Symbols[symbol];
+}
 
 export const isSnapshot = (obj) =>
   Array.isArray(obj) && 

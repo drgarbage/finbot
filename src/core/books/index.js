@@ -4,6 +4,13 @@
 //   asks: {}
 // }
 
+export const Symbols = {
+  BTCUSD: "BTC:USD",
+  BTCUSDT: "BTC:USDT",
+  ETHUSD: "ETH:USD",
+  ETHUSDT: "ETH:USDT",
+}
+
 export class Book {
   connect(symbol){}
   disconnect(){}

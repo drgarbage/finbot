@@ -15,6 +15,7 @@ export class BitfinexBook extends Book {
     this.refresh = null;
   }
   connect(symbol) {
+    if(this.socket) return;
     let url = 'wss://api-pub.bitfinex.com/ws/2'
     let snapshotUrl = 'https://api-pub.bitfinex.com/v2/book/tBTCUSD/P0?_full=1';
     let cmd = {
@@ -31,6 +32,7 @@ export class BitfinexBook extends Book {
       //   return onError(new Error('Subscribtion Failed.'));
       if(obj.chanId)
         channelId = obj.chanId;
+      console.info('Bitfinex connected: ', symbol);
     }
     const onSnapshot = (obj) => {
       this.data = parseSnapshot(obj);

@@ -1,14 +1,20 @@
 import React, {useRef} from 'react';
-import { Book } from '../../core/books';
+import { Symbols, Book } from '../../core/books';
 import { BinanceBook } from '../../core/books/binance';
 import { BitfinexBook } from '../../core/books/bitfinex';
 import { CoinbaseBook } from '../../core/books/coinbase';
-import { BookView } from '../../components/book-view';
+import { BookViewV2 as BookView } from '../../components/book-view-v2';
 
 class JointBook extends Book {
   constructor(books = []){
     super();
     this.books = books;
+  }
+  connect(symbol){
+    this.books.forEach(book => book.connect(symbol));
+  }
+  disconnect(){
+    this.books.forEach(book => book.disconnect());
   }
   snapshot(){
     let output = {id:0, bids: {}, asks: {}};
@@ -33,7 +39,7 @@ class JointBook extends Book {
   }
 }
 
-export const PageBookViewer = (props) => {
+export const PageBookViewerV2 = (props) => {
   const bitfinex = useRef(new BitfinexBook());
   const binance = useRef(new BinanceBook());
   const coinbase = useRef(new CoinbaseBook());
@@ -43,15 +49,11 @@ export const PageBookViewer = (props) => {
 
   const connect = () => {
     console.info('connect');
-    bitfinex.current.connect('BTC:USDT');
-    binance.current.connect('BTC:USDT');
-    coinbase.current.connect('BTC:USDT');
+    joint.current.connect(Symbols.BTCUSDT);
   }
   const disconnect = () => {
     console.info('disconnect');
-    bitfinex.current.disconnect();
-    binance.current.disconnect();
-    coinbase.current.disconnect();
+    joint.current.disconnect();
   }
   return (
     <div>
@@ -60,7 +62,7 @@ export const PageBookViewer = (props) => {
         <button onClick={() => disconnect()}>DISCONNECT</button>
       </div>
       <BookView
-        width={window.innerWidth- 20}
+        width={window.innerWidth- 100}
         height={window.innerHeight - 100}
         bookSource={joint.current}
         />
