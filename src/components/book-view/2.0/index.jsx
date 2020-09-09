@@ -3,17 +3,37 @@ import {decimalPlaces} from '../../../core/utils';
 import _ from 'lodash';
 
 const draw = (context) => {
-  const v = value => _.round(value, decimalPlaces(context.priceGap));
+  const v = value => _.round(value, decimalPlaces(context.priceGap) + 2);
   const av = value => Math.abs(v(value));
-  const gv = (price, gap) => {
-    let dplace = decimalPlaces(gap);
+  const p2ui = price => price * context.priceScale * -1;
+  const ui2p = value => value / context.priceScale;
+  const priceRange = (context) => {
+    let { physical, priceOrigin, priceGap } = context;
+    let verticalHalfPriceRange = ui2p(physical.h / 2)
+    let visualMinPrice = priceOrigin - verticalHalfPriceRange;
+    let visualMaxPrice = priceOrigin + verticalHalfPriceRange;
+    let visualMinPriceGroup = gv(visualMinPrice);
+    let visualMaxPriceGroup = gv(visualMaxPrice);
+    return {
+      min: visualMinPrice,
+      max: visualMaxPrice,
+      gmin: visualMinPriceGroup,
+      gmax: visualMaxPriceGroup
+    }
+  }
+  const gv = (price) => {
+    let { priceGap } = context;
+    let dplace = decimalPlaces(priceGap);
     let scale = parseFloat(Math.pow(10, dplace));
     let valueScaled = price * scale;
-    let gapScaled = gap * scale;
-    return Math.round(parseInt(valueScaled / gapScaled) * gapScaled) / scale;
+    let gapScaled = priceGap * scale;
+    let output = Math.floor(Math.floor(valueScaled / gapScaled) * gapScaled) / scale;
+    return output;
   }
-  const rangev = values => values.length > 0 ? 
-    `${v(values[0].price)} - ${v(_.last(values).price)}` : 'N/A';
+  const rangev = values => {
+    return values.length > 0 ? 
+      `${v(values[0].price)} - ${v(_.last(values).price)}` : 'N/A';
+  }
   const bar = (context, {cx, cy, w, h, fill}) => {
     let { g } = context;
     g.save();
@@ -30,16 +50,18 @@ const draw = (context) => {
     g.fillText(text, cx, cy, w);
     g.restore();
   }
-  const grouping = (context, values) =>
-    _(values)
-    .groupBy(v => gv(v.price, context.priceGap))
-    .map(v => ({
-      price: v[0].price, 
-      amount: _.sumBy(v, d => d.amount),
-      stacked: 0
-    }))
-    .sortBy(['price']).reverse()
-    .value();
+  const grouping = (context, values, range) => {
+    return _(values)
+      .filter(v => _.inRange(v.price, range.min, range.max))
+      .groupBy(v => gv(v.price))
+      .map(v => ({
+        price: gv(v[0].price), 
+        amount: _.sumBy(v, d => d.amount),
+        stacked: 0
+      }))
+      .sortBy(['price']).reverse()
+      .value();
+  }
   const calculate = (context, values) => {
     var sum = 0, maxAmount = 0, maxSum = 0;
     values.forEach(v => {
@@ -52,30 +74,31 @@ const draw = (context) => {
     return { maxAmount, maxSum };
   }
   const renderGrid = (context) => {
-    let { g } = context;
+    let { g, physical, priceGap, priceScale } = context;
+    if(priceGap * priceScale < 10) return;
+
+    let pr = priceRange(context);
     g.save();
-    g.fillStyle = '#ffffff11';
-    for(let x = -10000; x < 10000; x += 100)
-      for(let y = -10000; y < 10000; y += 100){
-        g.fillRect(-10000, y, 20000, 1);
-        g.fillRect(x, -10000, 1, 20000);
-      }
+    for(let p = pr.gmin; p <= pr.gmax; p+=priceGap/2){
+      g.fillStyle = p % priceGap == 0 ? 'rgba(65,90,101, 0)' : 'rgba(65,90,101,1)';
+      g.fillRect(0, p2ui(p), physical.w, 1);
+    }
     g.restore();
   }
   const renderBar = (context, value, {maxAmount, maxSum, fill}) => {
     let { g, columns, priceGap } = context;
-    let x = 0, y = value.price;
+    let x = 0, y = p2ui(value.price), h = p2ui(priceGap);
     let a = av(value.amount) / maxAmount;
     let s = av(value.stacked) / maxSum;
     g.save();
     g.translate(x,y);
-    bar(context, {...columns[1], w: columns[1].w * a, h: priceGap, fill});
-    bar(context, {...columns[2], w: columns[2].w * s, h: priceGap, fill});
+    bar(context, {...columns[1], w: columns[1].w * a, h, fill});
+    bar(context, {...columns[2], w: columns[2].w * s, h, fill});
     g.restore();
   }
   const renderLabel = (context, value, {fill, font}) => {
     let { g, columns } = context;
-    let x = 0, y = value.price;
+    let x = 0, y = p2ui(value.price);
     g.save();
     g.translate(x,y);
     label(context, v(value.price), {...columns[0], cx: columns[0].cx + 10, fill, font});
@@ -89,11 +112,14 @@ const draw = (context) => {
   const renderOverlay = (context, cache) => {
     let { g, physical: { w, h } } = context;
     let { sortedBids, sortedAsks, maxAmount, maxSum } = cache;
+    let range = priceRange(context);
     let lines = [
       `MAX AMT: ${v(maxAmount)}`,
       `MAX SUM: ${v(maxSum)}`,
       `BIDS: ${rangev(sortedBids)}`,
       `ASKS: ${rangev(sortedAsks)}`,
+      `VIEW: ${v(range.min)} - ${v(range.max)}`,
+      `GVIEW: ${v(range.gmin)} - ${v(range.gmax)}`,
     ];
 
     g.save();
@@ -104,27 +130,28 @@ const draw = (context) => {
     g.restore();
   }
   const render = (context, cache) => {
-    let { g, priceOrigin, physical } = context;
+    let { g, viewport, priceOrigin, physical } = context;
     let { sortedBids, sortedAsks, maxAmount, maxSum } = cache;
 
     g.clearRect(0, 0, physical.w, physical.h);
     g.save();
     g.translate(0, physical.h/2);
-    g.translate(0, -priceOrigin);
+    g.translate(0, -p2ui(priceOrigin));
+    g.scale(viewport.w, viewport.h);
     
     renderGrid(context);
 
     sortedBids.forEach(v => 
-      renderBar(context, v, {maxAmount, maxSum, fill: 'green'}));
+      renderBar(context, v, {maxAmount, maxSum, fill: 'rgb(46,204,113)'}));
     
     sortedAsks.forEach(v =>
-      renderBar(context, v, {maxAmount, maxSum, fill: 'red'}));
+      renderBar(context, v, {maxAmount, maxSum, fill: 'rgb(231,76,20)'}));
     
     sortedBids.forEach(v =>
-      renderLabel(context, v, {fill: 'white', font: '16px Arial'}));
+      renderLabel(context, v, {fill: 'white', font: '14px Helvetica'}));
     
     sortedAsks.forEach(v =>
-      renderLabel(context, v, {fill: 'white', font: '16px Arial'}));
+      renderLabel(context, v, {fill: 'white', font: '14px Helvetica'}));
     
     renderCursor(context);
 
@@ -135,8 +162,9 @@ const draw = (context) => {
   const init = (context) => {
     const { book } = context;
     let cache = {};
-    cache.sortedBids = grouping(context, book.bids);
-    cache.sortedAsks = grouping(context, book.asks);
+    let range = priceRange(context);
+    cache.sortedBids = grouping(context, book.bids, range);
+    cache.sortedAsks = grouping(context, book.asks, range);
     cache.summaryBids = calculate(context, cache.sortedBids);
     cache.summaryAsks = calculate(context, cache.sortedAsks.reverse());
     cache.maxAmount = Math.max(
@@ -153,18 +181,18 @@ const draw = (context) => {
 };
 
 var dragStart = null;
-var origin = 11500;
+var origin = 0;
 
 export const BookView = (props) => {
   const {
-    width = 300, height = 300, bookSource
+    width = 300, height = 300, bookSource,
+    pricePin = 0, zoom = 1, gap = 10,
   } = props;
-
   const canvasRef = useRef(null);
   const [config, setConfig] = useState({
-    priceOrigin: 0,
-    priceScale: 1,
-    priceGap: 100,
+    priceOrigin: pricePin,
+    priceScale: zoom,
+    priceGap: gap,
     columns: [
       {cx:   0, cy: 0, w: 100, h: 20},
       {cx: 100, cy: 0, w: 100, h: 20},
@@ -174,28 +202,36 @@ export const BookView = (props) => {
     viewport: {ox: 0, oy: 0, w: 1, h: 1},
     physical: {w: width, h: height},
   })
-  const [book, setBook] = useState({bids:{},asks:{}})
+  const [book, setBook] = useState({bids:{},asks:{}});
 
   useEffect(()=>{
     const canvasObj = canvasRef.current;
     const g = canvasObj.getContext('2d');
-    draw({g, ...config, priceOrigin: origin, book});
+    draw({g, ...config, 
+      priceOrigin: origin, 
+      priceScale: zoom,
+      priceGap: gap,
+      book});
   });
 
   useEffect(()=>{
-    var loop = setInterval(() => {
-      var b = {bids:{},asks:{}};
-      for(let p = -200; p < 15000; p++) {
-        let type = p > 11500 ? 'asks' : 'bids';
-        b[type][p] = {
-          price: p,
-          amount: Math.random() * 10 + Math.random()
-        }
-      }
-      setBook(b);
-    }, 33);
-    // var loop = setInterval(
-    //   () => setBook(bookSource.snapshot()), 33);
+    // var loop = setInterval(() => {
+    //   var b = {bids:{},asks:{}};
+    //   for(let p = -200; p < 15000; p++) {
+    //     let type = p > 11500 ? 'asks' : 'bids';
+    //     b[type][p] = {
+    //       price: p,
+    //       amount: Math.random() * 10 + Math.random()
+    //     }
+    //   }
+    //   setBook(b);
+    // }, 33);
+    var loop = setInterval(
+      () => setBook(bookSource.snapshot()), 33);
+    
+      bookSource.connect('BTC:USDT');
+    origin = pricePin;
+
     return () => clearInterval(loop);
   }, []);
 
@@ -204,6 +240,7 @@ export const BookView = (props) => {
       ref={canvasRef}
       width={config.physical.w}
       height={config.physical.h}
+
       onPointerDown={event=>{
         dragStart = {
           x: event.clientX, 
@@ -217,7 +254,7 @@ export const BookView = (props) => {
           x: event.clientX - dragStart.x,
           y: event.clientY - dragStart.y
         };
-        origin = dragStart.oy - offset.y;
+        origin = dragStart.oy + (offset.y / zoom);
       }}
       onPointerUp={event=>{
         dragStart = null;
