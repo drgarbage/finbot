@@ -1,5 +1,5 @@
 import React, {useRef} from 'react';
-import { Book } from '../../core/books';
+import { Symbols, Book } from '../../core/books';
 import { BinanceBook } from '../../core/books/binance';
 import { BitfinexBook } from '../../core/books/bitfinex';
 import { CoinbaseBook } from '../../core/books/coinbase';

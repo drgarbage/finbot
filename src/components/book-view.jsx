@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react';
-import {PressureViewPure} from './pressure-view-pure';
+import {PressureViewGrouped} from './pressure-view-grouped';
 
 export const BookView = (props) => {
   const {
@@ -8,20 +8,19 @@ export const BookView = (props) => {
 
   // data
   // const [state, setState] = useState({book: {}, books: []});
-  const [books, setBooks] = useState([]);
+  const [book, setBook] = useState({bids:{},asks:{}});
 
   useEffect(()=>{
     setInterval(()=>{
-      let book = bookSource.snapshot();
-      setBooks([book])
+      setBook(bookSource.snapshot())
     }, 33);
   }, []);
 
   return (
-    <PressureViewPure
+    <PressureViewGrouped
       width={width}
       height={height}
-      books={books}
+      book={book}
       />
   );
 }

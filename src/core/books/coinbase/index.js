@@ -3,9 +3,7 @@ import { crosFetch } from '../../utils';
 import { 
   parseSymbol, 
   parseSnapshot,
-  parseUpdate, 
 } from './utils';
-import {  } from '../bitfinex/utils';
 
 export class CoinbaseBook extends Book {
   constructor() {
@@ -17,7 +15,7 @@ export class CoinbaseBook extends Book {
   connect(symbol) {
     if(this.socket) return;
     let url = 'wss://ws-feed.pro.coinbase.com';
-    let snapshotUrl = 'https://api.pro.coinbase.com/products/BTC-USD/book?level=3';
+    let snapshotUrl = `https://api.pro.coinbase.com/products/${parseSymbol(symbol)}/book?level=3`;
     let cmd = {
       type: "subscribe",
       product_ids: [ parseSymbol(symbol)],
@@ -61,18 +59,18 @@ export class CoinbaseBook extends Book {
     }
 
     // regular full sync
-    // let syncFullSnapshot = async () => {
-    //   try{
-    //     let rep = await crosFetch(snapshotUrl);
-    //     let json = await rep.json();
-    //     onSnapshot([channelId || 0, json]);
-    //   }catch(error){
-    //     console.error(error.message);
-    //   }
-    // }
-    // let refresh = setInterval(syncFullSnapshot, 10000);
-    // this.refresh = refresh;
-    // syncFullSnapshot();
+    let syncFullSnapshot = async () => {
+      try{
+        let rep = await crosFetch(snapshotUrl);
+        let json = await rep.json();
+        onSnapshot([0, json]);
+      }catch(error){
+        console.error(error.message);
+      }
+    }
+    let refresh = setInterval(syncFullSnapshot, 10000);
+    this.refresh = refresh;
+    syncFullSnapshot();
 
     // stream
     let socket = new WebSocket(url);

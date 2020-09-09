@@ -2,195 +2,136 @@ import React, {useRef, useState, useEffect} from 'react';
 import {decimalPlaces} from '../core/utils';
 import _ from 'lodash';
 
-const DELTA_MIN = 10;
-const DELTA_MAX = 9999;
-const GAPS = [1000,500,100,50,10,5,1,0.5,0.05,0.005,0.0005,0.00005].reverse();
+draw = (context) => {
+  // let {g, config, book} = context;
 
-const groupPrice = (price, gap) =>{
-  let dplace = decimalPlaces(gap);
-  let scale = parseFloat(Math.pow(10, dplace));
-  let valueScaled = price * scale;
-  let doScaled = gap * scale;
-  return Math.round(parseInt(valueScaled / doScaled) * doScaled) / scale;
-}
+  let columns = [
+    {cx: 0, cy: 0, w: 100, h: 20},    // label
+    {cx: 100, cy: 0, w: 100, h: 20},  // amount
+    {cx: 200, cy: 0, w: 100, h: 20},  // stacked amount
+    {cx: 300, cy: 0, w: 100, h: 20},  // info
+  ];
 
-const mountToGroup = (price, amount, stackedAmount, groups, context) => {
-  let priceAdj = groupPrice(price, context.price.gap);
-  let key = `${priceAdj}`;
-  
-  if(!(key in groups))
-    return groups[key] = {amount, stackedAmount};
-  
-  groups[key].amount += amount;
-  groups[key].stackedAmount += stackedAmount;
-}
+  const v = (value) => _.round(v, 2);
+  const av = (value) => Math.abs(v(value));
+  const g = (value, gap) => {
+    let dplace = decimalPlaces(gap);
+    let scale = Math.pow(10, dplace);
+    let valueScaled = value * scale;
+    let gapScaled = gap * scale;
 
-const findBestGap = (delta, height, textSize) => {
-  let rowHeight = height / (delta*2);
-  if(rowHeight < textSize){
-    let jumpAmount = textSize / rowHeight;
-    for(let g of GAPS)
-      if(g > jumpAmount) return g;
-    return 1000;
+    return Math.round(parseInt(valueScaled / gapScaled) * gapScaled) / scale;
+  };
+  const p2c = (price) => price * context.viewport.h; // 價格到邏輯點
+  const c2p = (logicY) => logicY * (1.0 / context.viewport.h); // 邏輯點到價格
+  const s2c = (screenY) => screenY - offsetY; // 滑鼠點到邏輯點
+  const c2s = (logicY) => logicY - (-offsetY);// 邏輯點到滑鼠點
+  const s2p = (screenY) => c2p(s2c(screenY)); // 滑鼠點到價格
+  const p2s = (price) => c2s(p2c(price));     // 價格到滑鼠點
+  const bar = (context, {cx, cy, w, h, fill}) => {
+    let { g } = context;
+    g.save();
+    g.translate(-cx, -cy);
+    g.fillStyle = fill;
+    g.fillRect(0, -h/2, w, h);
+    g.restore();
   }
-
-  return 1;
-}
-
-const priceInRange = (price, context) => {
-  if(price > context.price.max) return false;
-  if(price < context.price.min) return false;
-  return true;
-}
-
-const drawBar = (ctx, value, sumValue, {price, scale}) => {
-  let posY = (value.price - price.origin) * scale.y;
-  let amountWidth = Math.abs(value.amount) * scale.x;
-  ctx.fillRect( 100, posY, amountWidth, price.unit);
-  ctx.fillRect( 200, posY, sumValue, price.unit);
-}
-
-const drawPriceLabel = (ctx, {price, scale}, groups) => {
-  for(let p = _.round(price.min); p < price.max ; p += 1) {
-    if(p % price.gap !== 0) continue;
-    let posY = (p - price.origin) * scale.y;
-    ctx.fillStyle = 'silver';
-    ctx.font = `${price.fontSize}px Arial`;
-    ctx.textBaseline = 'middle';  
-    ctx.fillText(p, 0, posY);
-
-    let priceKey = `${p}`;
-    if(priceKey in groups){
-      let group = groups[priceKey];
-      ctx.fillText(Math.abs(_.round(group.amount, decimalPlaces(price.gap) + 2)), 110, posY);
-      ctx.fillText(_.round(group.stackedAmount, decimalPlaces(price.gap) + 2), 210, posY);
-    }
+  const label = (context, {cx, cy, w, h, text, fill, font}) => {
+    let { g } = context;
+    g.save();
+    g.translate(-cx, -cy);
+    g.font = font;
+    g.textBaseline = 'middle';  
+    g.fillStyle = fill;
+    g.fillText(text, cx, cy, w);
+    g.restore();
   }
+  const renderBar = (context, value, {
+    fill, columns, amountRate, stackedRate }) => {
+    let { price, amount, stacked } = value;
+    let a = av(amount * amountRate);
+    let s = av(stacked * stackedRate);
+    let cy = p2c(price);
+    bar(context, {...columns[1], cy, w: columns[1].w * a, fill});
+    bar(context, {...columns[2], cy, w: columns[2].w * s, fill});
+  };
+  const renderBarLabel = (context, value, {fill = 'white', font = '16px Airal', columns}) => {
+    let { price, amount, stacked } = value;
+    let cy = p2c(price);
+    label(context, {...columns[0], cy, text: v(price), fill, font});
+    label(context, {...columns[0], cy, text: v(amount), fill, font});
+    label(context, {...columns[0], cy, text: v(stacked), fill, font});
+  };
+  const renderBars = (context, values, options) => // let { fill, columns, amountRate, stackedRate} = options;
+    values.forEach(v => renderBar(context, v, options));
+  const renderBarLabels = (context, values, options) => // let { fill, columns} = options;
+    values.forEach(v => renderBarLabel(context, v, options));
+  const renderCursor = (context) => {};
+  const renderOverlay = (context) => {};
+  const render = (context, cache) => {
+    let { g, viewport: { w, h, ox, oy}, physical: { w, h }};
+
+    g.clearRect(0,0,w,h);
+    g.save();
+    // g.translate(-p2c(ox), -p2c(oy));
+
+    // asks
+    renderBars(context, [], {fill: 'red', columns});
+    renderBarLabels(context, [], {fill: 'white', font: '16px Arial', columns});
+
+    // bids
+    renderBars(context, [], {fill: 'green', columns});
+    renderBarLabels(context, [], {fill: 'white', font: '16px Arial', columns});
+
+    // operators
+    renderCursor(context, {fill: 'white', font: '16px Arial'});
+    renderOverlay(context, {fill: 'white', font: '16px Arial'});
+
+    g.restore();
+  };
+  const init = (context) => {
+    let { book } = context;
+    let cache = {};
+    _(book.bids).groupBy(v => g(v.price))
+    cache.sortedBids = _(book.bids).sortBy('price').reverse().value();
+    cache.sortedAsks = _(book.asks).sortBy('price').reverse().value();
+  };
+  
+  let cache = init(context);
+  render(context, cache);
 }
-
-const draw = (ctx, {delta, width, height}, book) => {
-  let sortedAsks = _(book.asks).sortBy('price').reverse().value();
-  let sortedBids = _(book.bids).sortBy('price').reverse().value();
-  let firstBid = sortedBids[0];
-
-  let priceOrigin = firstBid?.price || 0;
-  let priceMax = priceOrigin + delta;
-  let priceMin = priceOrigin - delta;
-  let priceToScreenUnit = height / (delta*2);
-
-  let context = {
-    g: ctx,
-    delta: delta,
-    price: {
-      origin: priceOrigin,
-      max: priceMax,
-      min: priceMin,
-      unit: priceToScreenUnit,
-      gap: findBestGap(delta, height, 16),
-      fontSize: 16,
-    },
-    scale: {
-      x: 10,
-      y: priceToScreenUnit * -1
-    }
-  }
-  let center = {x: 0, y: height * 0.5};
-  let groups = {};
-
-  ctx.save();
-  ctx.translate(center.x, center.y);
-
-  let sumBids = 0;
-  ctx.fillStyle = '#00ff0033';
-  sortedBids.forEach(value => {
-    if(!priceInRange(value.price, context)) return;
-    sumBids+=Math.abs(value.amount);
-    drawBar(ctx, value, sumBids, context);
-    mountToGroup(value.price, value.amount, sumBids, groups, context);
-  });
-      
-  let sumAsks = 0;
-  ctx.fillStyle = '#ff000033';
-  sortedAsks.reverse().forEach(value => {
-    if(!priceInRange(value.price, context)) return;
-    sumAsks+=Math.abs(value.amount);
-    drawBar(ctx, value, sumAsks, context);
-    mountToGroup(value.price, value.amount, sumAsks, groups, context);
-  });
-
-  drawPriceLabel(ctx, context, groups);
-      
-  ctx.restore();
-
-  console.log(width);
-  
-  let posX = width - 150;
-  let posY = 40;
-  ctx.fillStyle = '#00000088';
-  ctx.fillRect(posX - 10, posY - 20, 150, 130);
-  ctx.fillStyle = 'white';
-  ctx.fillText(`SCALE: ( ${context.scale.x} , ${context.scale.y} )`, posX, posY);
-  ctx.fillText(`ORIGIN: ${priceOrigin}`, posX, posY+=20);
-  ctx.fillText(`PRICE MAX: ${priceMax}`, posX, posY+=20);
-  ctx.fillText(`PRICE MIN: ${priceMin}`, posX, posY+=20);
-  
-  if(sortedAsks.length > 0)
-    ctx.fillText(
-      `ASKS: ${_.first(sortedAsks).price} - ${_.last(sortedAsks).price}`, 
-      posX, posY+=20 );
-
-  if(sortedBids.length > 0)
-    ctx.fillText(
-      `BIDS: ${_.first(sortedBids).price} - ${_.last(sortedBids).price}`, 
-      posX, posY+=20 );
-
-};
 
 export const PressureViewSimple = (props) => {
   const { 
-    width = 300, height = 300, book,
+    width = 300, height = 300, source,
   } = props;
 
   const canvasRef = useRef(null);
-  const [delta, setDelta] = useState(props.delta);
-  const [dragStart, setDragStart] = useState(null);
+  const [book, setBook] = useState({bids:{},asks:{}});
+  const [config, setConfig] = useState({
+    pricePin: 10000,
+    priceStep: 1,
+    viewport: {w: 1, h: 1, ox: 0, oy: 0},
+    physical: {w: width, h: height},
+  });
 
   useEffect(()=>{
     const canvasObj = canvasRef.current;
-    const ctx = canvasObj.getContext('2d');
-    ctx.clearRect(0,0,width,height);
+    const g = canvasObj.getContext('2d');
+    draw({g, config, book});
+  });
 
-    draw(ctx, {delta,width,height}, book);
-  });  
+  useEffect(()=>{
+    var loop = setInterval(
+      () => setBook(source.snapshot()), 66);
+    return () => clearInterval(loop);
+  },[]);
 
   return (
     <canvas
-      style={props.style}
       ref={canvasRef}
-      width={width}
-      height={height}
-      onPointerDownCapture={e => {
-        setDragStart({delta, x: e.clientX, y: e.clientY});
-        canvasRef.current.setPointerCapture(e.pointerId);
-      }}
-      onPointerMoveCapture={e => {
-        if(!dragStart) return;
-        let cur = {x: e.clientX, y:e.clientY};
-
-        let direction = (dragStart.y > height / 2) ? -1 : 1;
-        let offset = (cur.y - dragStart.y) * 0.5 * 0.5;
-        let nextDelta = dragStart.delta + offset * direction;
-
-        if(nextDelta < DELTA_MIN) nextDelta = DELTA_MIN;
-        if(nextDelta > DELTA_MAX) nextDelta = DELTA_MAX;
-
-        setDelta(nextDelta);
-      }}
-      onPointerUpCapture={e => {
-        if(!dragStart) return;
-        setDragStart(null);
-        canvasRef.current.releasePointerCapture(e.pointerId);
-      }}
+      width={config.w}
+      height={config.h}
     ></canvas>
   );
 }
