@@ -1,5 +1,17 @@
-export const parseSymbol = (symbol) =>
-  symbol.toLowerCase().replace(':','');
+const SymbolMapping = {
+  'BTC:USD': 'btcusdt', // not support
+  'BTC:USDT': 'btcusdt',
+  'ETH:USD': 'ethusdt', // not support
+  'ETH:USDT': 'ethusdt',
+}
+
+export const parseSymbol = (symbol) => {
+  if(!symbol in SymbolMapping)
+    throw new Error("Symbol Not Supported.");
+    
+  return SymbolMapping[symbol];
+}
+
 
 export const parseDepth = (obj) => {
   let output = {id: obj.lastUpdateId, bids: {}, asks: {}};

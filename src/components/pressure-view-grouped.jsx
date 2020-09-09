@@ -4,27 +4,16 @@ import _ from 'lodash';
 
 const DELTA_MIN = 1;
 const DELTA_MAX = 9999;
-const GAPS = [
-  [0.001, 100, 500],
-  [0.01, 100, 500],
-  [0.1, 100, 500],
-  [1, 100, 500],
-  [5, 100, 500],
-  [10, 500, 1000],
-  [50, 500, 1000],
-  [100, 500, 5000],
-  [500, 500, 5000],
-  [1000, 500, 5000],
-];
+const GAPS = [0.001,0.01,0.1,1,5,10,50,100,500,1000];
 const live = {cursor: {x: -1, y: -1}};
 
 const findBestGap = (delta, height, textSize) => {
-  let rowHeight = height / (delta*2);
-  let jumpAmount = textSize / rowHeight;
+  // let rowHeight = height / (delta*2);
+  // let jumpAmount = textSize / rowHeight;
   for(let g of GAPS)
-    if(g[0] > jumpAmount) 
+    if(height / (delta * 2 * g) > textSize) 
       return g;
-  return _.last(GAPS);
+  return 1000;
 }
 
 const draw = (context, book) => {
@@ -42,8 +31,8 @@ const draw = (context, book) => {
   }
   
   // group functions
-  const groupPrice = (value) =>{
-    let { gap } = context.price;
+  const groupPrice = (value, gap) =>{
+    if(!gap) gap = context.price.gap;
     let dplace = decimalPlaces(gap);
     let rs = gap * _.round(parseFloat(value) / gap, dplace);
     return rs;
@@ -59,25 +48,6 @@ const draw = (context, book) => {
   }
   
   // render functions
-  const renderBids = (sortedBids) => {
-    let { g } = context;
-    let sumBids = 0;
-    sortedBids.forEach(({price, amount}) => {
-      if(!priceInRange(price)) return;
-      sumBids+=amount;
-      renderPriceBar(price, amount, sumBids, '#00ff0033');
-      mountToGroup(price, amount, sumBids);
-    });
-  }
-  const renderAsks = (sortedAsks) => {
-    let sumAsks = 0;
-    sortedAsks.reverse().forEach(({price, amount}) => {
-      if(!priceInRange(price)) return;
-      sumAsks+=amount;
-      renderPriceBar(price, amount, sumAsks, '#ff000033');
-      mountToGroup(price, amount, sumAsks);
-    });
-  }
   const renderPriceBar = (price, amount, sum, fillstyle) => {
     let {g, scale, price: {amountMax, sumMax}} = context;
     let {unit} = context.price;
@@ -153,18 +123,14 @@ const draw = (context, book) => {
   
   }
   const renderChart = () => {
-    let {g, sortedBids, sortedAsks, center: {x, y}} = context;
-    // let {x, y} = context.center;
+    let {g, center: {x, y}} = context;
     g.save();
     g.translate(x, y);
-    // renderBids(sortedBids);
-    // renderAsks(sortedAsks);
-    calculateChart();
     renderGroupedBar();
     renderPriceLabels();
     g.restore();
   }
-  const calculateChart = () => {
+  const calculate = () => {
     let {sortedBids, sortedAsks} = context;
     let sumBids = 0;
     sortedBids.forEach(({price, amount}) => {
@@ -203,14 +169,16 @@ const draw = (context, book) => {
     let {height, delta, zoom} = context;
     let sortedAsks = _(book.asks).sortBy('price').reverse().value();
     let sortedBids = _(book.bids).sortBy('price').reverse().value();
+
+
     let firstBid = sortedBids[0];
     let fontSize = 16;
-    let [gap, amountMax, sumMax] = findBestGap(delta, height, fontSize);
+    let gap = findBestGap(delta, height, fontSize);
   
-    let priceOrigin = firstBid?.price || 0;
-    let priceMax = priceOrigin + delta;
-    let priceMin = priceOrigin - delta;
-    let priceToScreenUnit = height / (delta*2);
+    let priceOrigin = groupPrice(firstBid?.price || 0, gap);
+    let priceMax = groupPrice(priceOrigin + delta * gap, gap);
+    let priceMin = groupPrice(priceOrigin - delta * gap, gap);
+    let priceToScreenUnit = height / (delta*gap*2);
   
     context.sortedAsks = sortedAsks;
     context.sortedBids = sortedBids;
@@ -220,8 +188,6 @@ const draw = (context, book) => {
       min: priceMin,
       unit: priceToScreenUnit,
       gap: gap,
-      amountMax: amountMax,
-      sumMax: sumMax,
       fontSize: fontSize,
     };
     context.scale = {
@@ -235,11 +201,12 @@ const draw = (context, book) => {
 
   // execute render
   setup(context, book);
+  calculate();
   renderChart();
   renderOverlays();
 };
 
-export const PressureViewPure = (props) => {
+export const PressureViewGrouped = (props) => {
   const { 
     width = 300, height = 300, book = {},
   } = props;

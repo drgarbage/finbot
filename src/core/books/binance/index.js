@@ -28,6 +28,7 @@ export class BinanceBook extends Book {
     this.data = null;
   }
   async connect(symbol, channel = 'depth@100ms'){
+    if(this.socket) return;
     let streamName = parseSymbol(symbol);
     let url = `wss://stream.binance.com:9443/ws/${streamName}`;
     let requestId = new Date().valueOf();

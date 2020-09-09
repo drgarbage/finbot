@@ -1,5 +1,16 @@
-export const parseSymbol = (symbol) =>
-  `${symbol.toUpperCase().replace(':','-')}`;
+const SymbolMapping = {
+  'BTC:USD': 'BTC-USD',
+  'BTC:USDT': 'BTC-USD', // usdt not support
+  'ETH:USD': 'ETH-USD',
+  'ETH:USDT': 'ETH-USD', // usdt not support
+}
+
+export const parseSymbol = (symbol) => {
+  if(!(SymbolMapping[symbol]))
+    throw new Error("Symbol Not Supported.");
+
+  return SymbolMapping[symbol];
+}
 
 export const parseSnapshot = (obj) => {
   let output = {id:obj.sequence, bids: {}, asks: {}};
