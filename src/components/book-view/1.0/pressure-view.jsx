@@ -1,6 +1,6 @@
 // deprecated
 import React, { useRef, useState, useEffect } from 'react';
-import {decimalPlaces} from '../core/utils';
+import {decimalPlaces} from '../../../core/utils';
 import _ from 'lodash';
 
 const DELTA_MIN = 5;
@@ -181,6 +181,7 @@ const drawHistory = (ctx, config, books) => {
   let startPos = config.width - 300;
   let reversedBooks = [...books].reverse();
   let index = 0;
+
   while(index < config.width - 400) {
     let book = reversedBooks[index];
     drawDepth(

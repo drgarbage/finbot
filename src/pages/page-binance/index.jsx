@@ -1,23 +1,19 @@
 // deprecated
-import React, { useState } from 'react';
-import {subscribe} from '../../core/data-sources/biance';
-import {BookPressureView} from '../../components/book-pressure-view';
+import React, { useRef, useEffect } from 'react';
+import {BookView} from '../../components/book-view/1.0';
+import {Symbols} from '../../core/books';
+import {BinanceBook} from '../../core/books/binance';
 
 export const PageBinance = () => {
-  const [steps, setSteps] = useState(10);
+  const source = useRef(new BinanceBook());
+  useEffect(() => source.current.connect(Symbols.BTCUSDT), []);
   return (
     <div style={styles.container}>
-      <BookPressureView 
-        style={{background: 'black'}}
-        symbol="BTC:USDT"
-        channel="depth20@100ms"
-        dataSource={{ subscribe }}
-        priceSteps={steps}
-        onPriceStepChanged={setSteps}
-        priceOffset={1}
-        showHistory
+      <BookView 
+        bookSource={source.current}
         width={800} 
-        height={800} />
+        height={800}
+        />
     </div>
   );
 }

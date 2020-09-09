@@ -1,8 +1,8 @@
 import React, {useRef, useState, useEffect} from 'react';
-import {decimalPlaces} from '../core/utils';
+import {decimalPlaces} from '../../../core/utils';
 import _ from 'lodash';
 
-draw = (context) => {
+const draw = (context) => {
   // let {g, config, book} = context;
 
   let columns = [
@@ -23,11 +23,11 @@ draw = (context) => {
     return Math.round(parseInt(valueScaled / gapScaled) * gapScaled) / scale;
   };
   const p2c = (price) => price * context.viewport.h; // 價格到邏輯點
-  const c2p = (logicY) => logicY * (1.0 / context.viewport.h); // 邏輯點到價格
-  const s2c = (screenY) => screenY - offsetY; // 滑鼠點到邏輯點
-  const c2s = (logicY) => logicY - (-offsetY);// 邏輯點到滑鼠點
-  const s2p = (screenY) => c2p(s2c(screenY)); // 滑鼠點到價格
-  const p2s = (price) => c2s(p2c(price));     // 價格到滑鼠點
+  // const c2p = (logicY) => logicY * (1.0 / context.viewport.h); // 邏輯點到價格
+  // const s2c = (screenY) => screenY - offsetY; // 滑鼠點到邏輯點
+  // const c2s = (logicY) => logicY - (-offsetY);// 邏輯點到滑鼠點
+  // const s2p = (screenY) => c2p(s2c(screenY)); // 滑鼠點到價格
+  // const p2s = (price) => c2s(p2c(price));     // 價格到滑鼠點
   const bar = (context, {cx, cy, w, h, fill}) => {
     let { g } = context;
     g.save();
@@ -69,9 +69,9 @@ draw = (context) => {
   const renderCursor = (context) => {};
   const renderOverlay = (context) => {};
   const render = (context, cache) => {
-    let { g, viewport: { w, h, ox, oy}, physical: { w, h }};
+    let { g, viewport, physical} = context;
 
-    g.clearRect(0,0,w,h);
+    g.clearRect(0,0,physical.w, physical.h);
     g.save();
     // g.translate(-p2c(ox), -p2c(oy));
 
@@ -101,7 +101,7 @@ draw = (context) => {
   render(context, cache);
 }
 
-export const PressureViewSimple = (props) => {
+export const BookView = (props) => {
   const { 
     width = 300, height = 300, source,
   } = props;

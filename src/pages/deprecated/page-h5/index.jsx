@@ -1,6 +1,6 @@
 // deprecated
 import React, {useEffect, useState} from 'react';
-import {subscribeBook, subscribeRawBook} from '../../core/applications';
+import {subscribeBook, subscribeRawBook} from '../../../core/deprecated/applications';
 import _ from 'lodash';
 import './index.css';
 

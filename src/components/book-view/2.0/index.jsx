@@ -1,5 +1,5 @@
 import React, {useRef, useState, useEffect} from 'react';
-import {decimalPlaces} from '../core/utils';
+import {decimalPlaces} from '../../../core/utils';
 import _ from 'lodash';
 
 const draw = (context) => {
@@ -155,7 +155,7 @@ const draw = (context) => {
 var dragStart = null;
 var origin = 11500;
 
-export const BookViewV2 = (props) => {
+export const BookView = (props) => {
   const {
     width = 300, height = 300, bookSource
   } = props;

@@ -1,4 +1,4 @@
-import {Book} from './';
+import {Book} from '../';
 import {decimalPlaces} from '../../utils';
 
 const GAPS = [1000,500,100,50,10,5,1,0.5,0.05,0.005,0.0005,0.00005].reverse();
@@ -35,8 +35,8 @@ export class Modifier extends Book {
 
   autoStep(height, labelSize) {
     let rowHeight = height / (this.delta*2);
-    if(rowHeight < textSize){
-      let jumpAmount = textSize / rowHeight;
+    if(rowHeight < labelSize){
+      let jumpAmount = labelSize / rowHeight;
       for(let g of GAPS)
         if(g > jumpAmount) return g;
       return 1000;

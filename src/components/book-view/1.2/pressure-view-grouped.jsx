@@ -1,5 +1,5 @@
 import React, {useRef, useState, useEffect} from 'react';
-import {decimalPlaces} from '../core/utils';
+import {decimalPlaces} from '../../../core/utils';
 import _ from 'lodash';
 
 const DELTA_MIN = 1;
