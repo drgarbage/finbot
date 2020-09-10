@@ -1,6 +1,11 @@
 body {
   background-color: rgb(54,71,79);
   overflow: hidden;
+  user-select: none; /* supported by Chrome and Opera */
+ -webkit-user-select: none; /* Safari */
+ -khtml-user-select: none; /* Konqueror HTML */
+ -moz-user-select: none; /* Firefox */
+ -ms-user-select: none; /* Internet Explorer/Edge */
 }
 
 .App {
@@ -58,13 +63,4 @@ input[type="range"]::-webkit-slider-thumb {
   background-color: #fff;
   border: 2px solid #999;
   box-shadow: -100vw 0 0 100vw #69eaab;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
 }
