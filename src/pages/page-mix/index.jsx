@@ -10,8 +10,8 @@ import { BookView } from '../../components/book-view';
 
 export const PageMix = () => {
   const source = useRef(new Mixer([
-    // new BitfinexBook(), 
-    // new BinanceBook(), 
+    new BitfinexBook(), 
+    new BinanceBook(), 
     new CoinbaseBook()
   ]));
   const [zoom, setZoom] = useState(1.0);
@@ -28,7 +28,7 @@ export const PageMix = () => {
         />
       <BookView
         width={window.innerWidth- 40}
-        height={window.innerHeight - 200}
+        height={window.innerHeight - 140}
         bookSource={source.current}
         zoom={zoom}
         />
