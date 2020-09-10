@@ -127,8 +127,34 @@ const draw = (context) => {
     label(context, av(value.stacked), {...columns[2], cx: columns[2].cx + 10, fill, font});
     g.restore();
   }
-  const renderCursor = (context) => {
-    let { g } = context;
+  const renderCursor = (context, cache) => {
+    let { g, cursor, physical, priceOrigin } = context;
+
+    if(!cursor) return;
+
+    let pos = {x: 0, y: cursor.y - (physical.h / 2) - -p2ui(priceOrigin)};
+    let price = av(ui2p(pos.y));
+    let groupPrice = gv(price);
+    let groupAmount = (groupPrice in cache.mergeMap) ?
+      av(cache.mergeMap[groupPrice].amount) : 'N/A';
+
+    g.save();
+    g.fillStyle = '#ffffff55';
+    g.fillRect(pos.x, pos.y, physical.w, 1);
+    
+    g.font = '18px Helvetica';
+    g.textBaseline = 'middle';
+    let text = `${price} - ${groupAmount}`;
+    let textSize = g.measureText(text);
+
+    g.strokeStyle = '#ffffff55';
+    g.clearRect(pos.x + 5, pos.y - 15, textSize.width + 10, 30);
+    g.strokeRect(pos.x + 5, pos.y - 15, textSize.width + 10, 30);
+
+    g.fillStyle = '#ffffff';
+    g.fillText(text, pos.x + 10, pos.y );
+    
+    g.restore();
   }
   const renderOverlay = (context, cache) => {
     let { g, physical: { w, h } } = context;
@@ -182,11 +208,12 @@ const draw = (context) => {
     // sortedAsks.forEach(v =>
     //   renderLabel(context, v, {fill: 'white', font: '14px Helvetica'}));
     
-    renderCursor(context);
+    renderCursor(context, cache);
 
     g.restore();
     
-    renderOverlay(context, cache);
+    if(context.overlay)
+      renderOverlay(context, cache);
   }
   const init = (context) => {
     const { book } = context;
@@ -209,6 +236,7 @@ const draw = (context) => {
     mergeIn(cache.sortedBids, merge);
     mergeIn(cache.sortedAsks, merge);
 
+    cache.mergeMap = merge;
     cache.merge = _.toArray(merge);
 
     return cache;
@@ -219,17 +247,19 @@ const draw = (context) => {
 };
 
 var dragStart = null;
+var cursor = null;
 var origin = 0, firstOrigin = -1;
 
 export const BookView = (props) => {
   const {
     width = 300, height = 300, bookSource,
-    pricePin = 0, zoom = 1, 
+    pricePin = 0, zoom = 1,
   } = props;
   const canvasRef = useRef(null);
   const [config, setConfig] = useState({
     priceOrigin: pricePin,
     priceScale: zoom,
+    overlay: false,
     columns: [
       {cx:   0, cy: 0, w: 100, h: 20},
       {cx: 100, cy: 0, w: 100, h: 20},
@@ -247,6 +277,7 @@ export const BookView = (props) => {
     draw({g, ...config, 
       priceOrigin: origin, 
       priceScale: zoom,
+      cursor,
       book});
   });
 
@@ -273,14 +304,27 @@ export const BookView = (props) => {
       width={config.physical.w}
       height={config.physical.h}
 
+      onDoubleClick={event=>{
+        setConfig(config => ({...config, overlay: !config.overlay}));
+      }}
+
       onPointerDown={event=>{
+        cursor = {
+          x: event.clientX - event.target.offsetLeft, 
+          y: event.clientY - event.target.offsetTop
+        };
         dragStart = {
           x: event.clientX, 
           y: event.clientY,
           oy: origin,
         };
       }}
+
       onPointerMove={event=>{
+        cursor = {
+          x: event.clientX - event.target.offsetLeft, 
+          y: event.clientY - event.target.offsetTop
+        };
         if(!dragStart) return;
         let offset = {
           x: event.clientX - dragStart.x,
@@ -288,7 +332,14 @@ export const BookView = (props) => {
         };
         origin = dragStart.oy + (offset.y / zoom);
       }}
+
       onPointerUp={event=>{
+        cursor = null;
+        dragStart = null;
+      }}
+
+      onPointerOut={event=>{
+        cursor = null;
         dragStart = null;
       }}
     ></canvas>
