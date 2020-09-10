@@ -37,6 +37,29 @@ a {
   overflow-y: auto;
 }
 
+input[type="range"] {
+  -webkit-appearance: none;
+  height: 40px;
+  width: 100%;
+  background: none;
+  outline: none;
+  border-radius: 0;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  background-color: #ddd;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 44px;
+  height: 44px;
+  background-color: #fff;
+  border: 2px solid #999;
+  box-shadow: -100vw 0 0 100vw #69eaab;
+}
+
 @keyframes App-logo-spin {
   from {
     transform: rotate(0deg);

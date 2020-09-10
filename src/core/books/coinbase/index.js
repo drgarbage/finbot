@@ -63,7 +63,7 @@ export class CoinbaseBook extends Book {
       try{
         let rep = await crosFetch(snapshotUrl);
         let json = await rep.json();
-        onSnapshot([0, json]);
+        onSnapshot(json);
       }catch(error){
         console.error(error.message);
       }

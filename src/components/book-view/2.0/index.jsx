@@ -73,6 +73,15 @@ const draw = (context) => {
     });
     return { maxAmount, maxSum };
   }
+  const mergeIn = (values, merged) => {
+    cache.sortedBids.forEach(v => {
+      let key = v.price;
+      if(!(key in merge))
+        return merge[key] = {price: v.price, amount: v.amount, stacked: v.stacked};
+      merged[key].amount += v.amount;
+      merge[key].stacked += v.stacked;
+    });
+  }
   const renderGrid = (context) => {
     let { g, physical, priceGap, priceScale } = context;
     if(priceGap * priceScale < 10) return;
@@ -173,6 +182,24 @@ const draw = (context) => {
     cache.maxSum = Math.max(
       av(cache.summaryBids.maxSum),
       av(cache.summaryAsks.maxSum));
+      
+    let merge = {};
+    cache.sortedBids.forEach(v => {
+      let key = v.price;
+      if(!(key in merge))
+        return merge[key] = {price: v.price, amount: v.amount, stacked: v.stacked};
+      merge[key].amount += v.amount;
+      merge[key].stacked += v.stacked;
+    });
+    cache.sortedAsks.forEach(v => {
+      let key = v.price;
+      if(!(key in merge))
+        return merge[key] = {price: v.price, amount: v.amount, stacked: v.stacked};
+      merge[key].amount += v.amount;
+      merge[key].stacked += v.stacked;
+    });
+    cache.merge = merge;
+
     return cache;
   }
 
