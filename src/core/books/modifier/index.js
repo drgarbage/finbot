@@ -45,6 +45,7 @@ export class Modifier extends Book {
     return 1;
   }
 
+  name(){return `${this.books.length} Books`;}
   connect(symbol){
     this._books.forEach(b => b.connect(symbol));
   }

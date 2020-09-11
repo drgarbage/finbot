@@ -5,15 +5,17 @@ import { PageBitfinex } from './pages/page-bitfinex';
 import { PageBinance } from './pages/page-binance';
 import { PageCoinBase } from './pages/page-coinbase';
 import { PageMix } from './pages/page-mix';
+import { PageDashboard } from './pages/page-dashboard';
 
 import './App.css';
 
 const pages = [
-  { n: 'H5', p: '/page-h5', c: PageH5 },
-  { n: 'BITFINEX', p: '/page-bitfinex', c: PageBitfinex },
-  { n: 'BINANCE', p: '/page-binance', c: PageBinance },
-  { n: 'COINBASE', p: '/page-coinbase', c: PageCoinBase },
+  // { n: 'H5', p: '/page-h5', c: PageH5 },
+  // { n: 'BITFINEX', p: '/page-bitfinex', c: PageBitfinex },
+  // { n: 'BINANCE', p: '/page-binance', c: PageBinance },
+  // { n: 'COINBASE', p: '/page-coinbase', c: PageCoinBase },
   { n: 'ALL', p: '/page-mix', c: PageMix },
+  { n: 'DASHBOARD', p: '/page-dashboard', c: PageDashboard}
 ];
 
 export const PageHome = (props) =>

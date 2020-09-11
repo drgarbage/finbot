@@ -178,6 +178,16 @@ const draw = (context) => {
     lines.forEach((line, index) => g.fillText(line, 0, index * 20));
     g.restore();
   }
+  const renderCaption = (context) => {
+    let {g, caption, physical} = context;
+    g.save();
+    g.translate(physical.w - 200, physical.h/2 - 40)
+    g.fillStyle = '#00000055';
+    g.font = `30px Arial Black`;
+    g.textBaseline = 'middle';
+    g.fillText(caption.toUpperCase(), 0, 0);
+    g.restore();
+  }
   const render = (context, cache) => {
     let { g, viewport, priceOrigin, physical } = context;
     let { sortedBids, sortedAsks, merge, maxAmount, maxSum } = cache;
@@ -185,13 +195,16 @@ const draw = (context) => {
     g.clearRect(0, 0, physical.w, physical.h);
     g.save();
     g.translate(0, physical.h/2);
+
+    renderCaption(context);
+
     g.translate(0, -p2ui(priceOrigin));
-    g.scale(viewport.w, viewport.h);
+    // g.scale(viewport.w, viewport.h);
     
     renderGrid(context);
 
     merge.forEach(v => 
-      renderBar(context, v, {maxAmount, maxSum, fill: v.amount > 0 ? 'rgb(46,204,113)' : 'rgb(231,76,20)'}));
+      renderBar(context, v, {maxAmount, maxSum, fill: v.amount > 0 ? 'rgb(46,204,113,.7)' : 'rgb(231,76,20,.7)'}));
 
     merge.forEach(v =>
       renderLabel(context, v, {fill: 'white', font: '14px Helvetica'}));
@@ -246,18 +259,22 @@ const draw = (context) => {
   render(context, cache);
 };
 
-var dragStart = null;
-var cursor = null;
-var origin = 0, firstOrigin = -1;
+// var dragStart = null;
+// var cursor = null;
+// var origin = 0, firstOrigin = -1;
 
 export const BookView = (props) => {
   const {
-    width = 300, height = 300, bookSource,
-    pricePin = 0, zoom = 1,
+    width = 300, height = 300, bookSource, zoom = 1,
   } = props;
   const canvasRef = useRef(null);
+  const dragStart = useRef(null);
+  const cursor = useRef(null);
+  const origin = useRef(0);
+  const firstOrigin = useRef(-1);
+  const loop = useRef(null);
   const [config, setConfig] = useState({
-    priceOrigin: pricePin,
+    priceOrigin: 0,
     priceScale: zoom,
     overlay: false,
     columns: [
@@ -275,27 +292,27 @@ export const BookView = (props) => {
     const canvasObj = canvasRef.current;
     const g = canvasObj.getContext('2d');
     draw({g, ...config, 
-      priceOrigin: origin, 
+      caption: bookSource.name(),
+      priceOrigin: origin.current, 
       priceScale: zoom,
-      cursor,
+      cursor: cursor.current,
       book});
   });
 
   useEffect(()=>{
-    var loop = setInterval(() => {
+    loop.current = setInterval(() => {
         let snap = bookSource.snapshot();
-        if(firstOrigin == -1) {
+        if(firstOrigin.current == -1) {
           let first = _(snap.bids).sortBy(['price']).last();
-          firstOrigin = !first ? -1 : first.price;
-          origin = firstOrigin;
+          firstOrigin.current = !first ? -1 : first.price;
+          origin.current = firstOrigin.current;
         } 
-        setBook(() => snap);
+        setBook(() => (snap));
       }, 33);
     
     bookSource.connect('BTC:USDT');
-    origin = pricePin;
 
-    return () => clearInterval(loop);
+    return () => clearInterval(loop.current);
   }, []);
 
   return (
@@ -309,38 +326,38 @@ export const BookView = (props) => {
       }}
 
       onPointerDown={event=>{
-        cursor = {
+        cursor.current = {
           x: event.clientX - event.target.offsetLeft, 
           y: event.clientY - event.target.offsetTop
         };
-        dragStart = {
+        dragStart.current = {
           x: event.clientX, 
           y: event.clientY,
-          oy: origin,
+          oy: origin.current,
         };
       }}
 
       onPointerMove={event=>{
-        cursor = {
+        cursor.current = {
           x: event.clientX - event.target.offsetLeft, 
           y: event.clientY - event.target.offsetTop
         };
-        if(!dragStart) return;
+        if(!dragStart.current) return;
         let offset = {
-          x: event.clientX - dragStart.x,
-          y: event.clientY - dragStart.y
+          x: event.clientX - dragStart.current.x,
+          y: event.clientY - dragStart.current.y
         };
-        origin = dragStart.oy + (offset.y / zoom);
+        origin.current = dragStart.current.oy + (offset.y / zoom);
       }}
 
       onPointerUp={event=>{
-        cursor = null;
-        dragStart = null;
+        cursor.current = null;
+        dragStart.current = null;
       }}
 
       onPointerOut={event=>{
-        cursor = null;
-        dragStart = null;
+        cursor.current = null;
+        dragStart.current = null;
       }}
     ></canvas>
   );

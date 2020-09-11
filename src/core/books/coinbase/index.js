@@ -5,6 +5,7 @@ import {
   parseSnapshot,
 } from './utils';
 
+const SNAPSHOT_INTERVAL = 10000;
 export class CoinbaseBook extends Book {
   constructor() {
     super();
@@ -12,6 +13,7 @@ export class CoinbaseBook extends Book {
     this.data = null;
     this.refresh = null;
   }
+  name(){return 'Coinbase';}
   connect(symbol) {
     if(this.socket) return;
     let url = 'wss://ws-feed.pro.coinbase.com';
@@ -68,7 +70,7 @@ export class CoinbaseBook extends Book {
         console.error(error.message);
       }
     }
-    let refresh = setInterval(syncFullSnapshot, 10000);
+    let refresh = setInterval(syncFullSnapshot, SNAPSHOT_INTERVAL);
     this.refresh = refresh;
     syncFullSnapshot();
 
@@ -114,6 +116,6 @@ export class CoinbaseBook extends Book {
     this.refresh = null;
   }
   snapshot(){
-    return this.data || {};
+    return this.data ? {...this.data} : {};
   }
 }

@@ -5,6 +5,7 @@ export class Mixer extends Book {
     super();
     this.books = books;
   }
+  name(){return `${this.books.length} Books`;}
   connect(symbol){
     this.books.forEach(book => book.connect(symbol));
   }

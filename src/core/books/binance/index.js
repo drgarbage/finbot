@@ -27,6 +27,7 @@ export class BinanceBook extends Book {
     this.socket = null;
     this.data = null;
   }
+  name(){return 'Binance';}
   async connect(symbol, channel = 'depth@100ms'){
     if(this.socket) return;
     let streamName = parseSymbol(symbol);
@@ -122,6 +123,6 @@ export class BinanceBook extends Book {
   }
 
   snapshot(){
-    return this.data || {};
+    return this.data ? {...this.data} : {};
   }
 }
