@@ -9,6 +9,7 @@ export const decimalPlaces = (number) => {
 }
 
 export const crosFetch = (url, options = {}) => {
-  let cors = 'https://cors-anywhere.herokuapp.com/';
+  // let cors = 'https://cors-anywhere.herokuapp.com/';
+  let cors = 'http://localhost:3001/';
   return fetch(`${cors}${url}`, options);
 }

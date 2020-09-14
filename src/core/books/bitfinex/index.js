@@ -20,7 +20,8 @@ export class BitfinexBook extends Book {
   connect(symbol) {
     if(this.socket) return;
     let url = 'wss://api-pub.bitfinex.com/ws/2'
-    let snapshotUrl = 'https://api-pub.bitfinex.com/v2/book/tBTCUSD/P0?_full=1';
+    let snapshotUrl = `https://api-pub.bitfinex.com/v2/book/${parseSymbol(symbol)}/P0?_full=1`;
+    // `https://api-pub.bitfinex.com/v2/book/${parseSymbol(symbol)}/P0`
     let cmd = {
       event: 'subscribe',
       channel: 'book',
@@ -72,7 +73,7 @@ export class BitfinexBook extends Book {
     // regular full sync
     let syncFullSnapshot = async () => {
       try{
-        let rep = await crosFetch(snapshotUrl);
+        let rep = await crosFetch(`${snapshotUrl}&time=${new Date().valueOf()}`);
         let json = await rep.json();
         onSnapshot([channelId || 0, json]);
       }catch(error){
@@ -96,8 +97,6 @@ export class BitfinexBook extends Book {
         if(isSnapshot(json)) return onSnapshot(json);
         
         if(isUpdate(json)) return onUpdate(json);
-
-        console.log('unhandled: ',json);
 
       }catch(error){onError(error);}
     };

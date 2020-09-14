@@ -2,6 +2,7 @@
   "name": "finbot",
   "version": "0.1.0",
   "private": true,
+  "proxy": "http://localhost:3001",
   "dependencies": {
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.3.2",
@@ -18,7 +19,9 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "server": "node server",
+    "local": "node server & react-scripts start"
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -34,5 +37,10 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "body-parser": "^1.19.0",
+    "cors-anywhere": "^0.4.3",
+    "express": "^4.17.1"
   }
 }
