@@ -19,10 +19,9 @@ export const PageMix = () => {
   return (
     <div>
       <input 
-        type="range" 
-        width="500px"
+        type="range"
         min={1} 
-        max={2500}
+        max={22000}
         value={zoom*1000}
         onChange={e => setZoom(e.target.value*0.001)}
         />

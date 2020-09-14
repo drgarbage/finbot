@@ -26,9 +26,8 @@ export const PageDashboard = () => {
     <div>
       <input 
         type="range" 
-        width="500px"
         min={1} 
-        max={2500}
+        max={22000}
         value={zoom*1000}
         onChange={e => setZoom(e.target.value*0.001)}
         />
