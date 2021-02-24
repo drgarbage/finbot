@@ -6,7 +6,7 @@ import {
   CoinbaseBook,
   Mixer
 } from '../../core/books';
-import { BookView } from '../../components/book-view';
+import { BookView } from '../../components/book-view/3.0';
 
 export const PageMix = () => {
   const source = useRef(new Mixer([
